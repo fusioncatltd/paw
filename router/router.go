@@ -18,6 +18,24 @@ func GetCLIRouter() *cli.Command {
 				Description: "Create a settings file with default values",
 				Action:      actions.InitDefaultSettingsFileAction,
 			},
+			{
+				Name:        "signup",
+				Usage:       "paw signup",
+				Description: "Create a new user account",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "email",
+						Usage:    "The email address of the new user",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "password",
+						Usage:    "The password for the new user",
+						Required: true,
+					},
+				},
+				Action: actions.SignUpAction,
+			},
 		},
 	}
 
