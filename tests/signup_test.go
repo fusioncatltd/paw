@@ -62,30 +62,6 @@ func TestSignUpAction(t *testing.T) {
 			},
 			expectedError: nil,
 		},
-		//{
-		//	name:      "missing email",
-		//	arguments: []string{"", "password123"},
-		//	setup: func() error {
-		//		return nil
-		//	},
-		//	expectedError: fmt.Errorf("both email and password are required"),
-		//},
-		//{
-		//	name:      "missing password",
-		//	arguments: []string{"test@example.com", ""},
-		//	setup: func() error {
-		//		return nil
-		//	},
-		//	expectedError: fmt.Errorf("both email and password are required"),
-		//},
-		//{
-		//	name:      "no arguments",
-		//	arguments: []string{},
-		//	setup: func() error {
-		//		return nil
-		//	},
-		//	expectedError: fmt.Errorf("both email and password are required"),
-		//},
 	}
 
 	for _, tt := range tests {
@@ -94,12 +70,6 @@ func TestSignUpAction(t *testing.T) {
 			if err := tt.setup(); err != nil {
 				t.Fatalf("Setup failed: %v", err)
 			}
-
-			// Create CLI command with actual arguments
-			//cmd := &cli.Command{
-			//	Name:      "signup",
-			//	Arguments: tt.arguments, // Directly set the arguments
-			//}
 
 			// Run the action
 			err := actions.SignUpAction(context.Background(), &cli.Command{

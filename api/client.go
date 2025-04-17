@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/fusioncatalyst/paw/contracts"
 
@@ -88,6 +89,12 @@ func (c *FCApiClient) GetAuthorization() string {
 	return c.authorization
 }
 
+// Update the authorization field setter
+func (c *FCApiClient) setAuthorization(authHeader string) {
+	// Remove "Bearer " prefix and any extra whitespace
+	c.authorization = strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+}
+
 func (c *FCApiClient) SignUp(email, password string) error {
 	type SignupRequest struct {
 		Email    string `json:"email"`
@@ -137,6 +144,7 @@ func (c *FCApiClient) SignUp(email, password string) error {
 		return fmt.Errorf("no authorization header in response")
 	}
 
-	c.authorization = authHeader
+	// Use the new setter method instead of direct assignment
+	c.setAuthorization(authHeader)
 	return nil
 }

@@ -20,18 +20,22 @@ func GetCLIRouter() *cli.Command {
 			},
 			{
 				Name:        "signup",
-				Usage:       "paw signup",
-				Description: "Create a new user account",
+				Usage:       "Create a new user account",
+				Description: "Sign up for a new account using email and password",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "email",
-						Usage:    "The email address of the new user",
+						Usage:    "User's email address",
 						Required: true,
 					},
 					&cli.StringFlag{
 						Name:     "password",
-						Usage:    "The password for the new user",
+						Usage:    "User's password",
 						Required: true,
+					},
+					&cli.BoolFlag{
+						Name:  "save-token",
+						Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
 					},
 				},
 				Action: actions.SignUpAction,
