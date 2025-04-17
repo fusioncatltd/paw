@@ -21,7 +21,7 @@ func (c *FCApiClient) ListProjects() ([]ProjectAPIResponse, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.authorization))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -81,7 +81,7 @@ func (c *FCApiClient) CreateProject(
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.authorization))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

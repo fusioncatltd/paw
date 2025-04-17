@@ -62,6 +62,12 @@ func GetCLIRouter() *cli.Command {
 				},
 				Action: actions.SignInAction,
 			},
+			{
+				Name:        "projects",
+				Usage:       "List all projects",
+				Description: "Get information about all projects you have access to",
+				Action:      actions.ListProjectsAction,
+			},
 		},
 	}
 

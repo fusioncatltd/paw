@@ -83,6 +83,13 @@ func (c *FCApiClient) GetHost() string {
 }
 
 func (c *FCApiClient) GetAuthorization() string {
+	// If authorization is not set in the structure, check environment
+	if c.authorization == "" {
+		if envToken := os.Getenv("FC_ACCESS_TOKEN"); envToken != "" {
+			// Store the token from environment in the structure
+			c.authorization = envToken
+		}
+	}
 	return c.authorization
 }
 

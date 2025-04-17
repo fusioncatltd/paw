@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# When asked to implement a new CLI command
+
+* First configure the command in @router file first. Add all the approproate flags and arguments.
+* Then implement the command in @actions folder. Create a new file for a new action.
+* When implementing the command,  follow the existing structure of commands and flags which already exists
+in @router file.
+* Most of the time you will need to make API calls from the command. Check @client code for the API
+calls, they should be there.
+* After implementing the command, you will need to write a test for it. Check @tests folder for the existing tests 
+and follow the rules for writing tests.
