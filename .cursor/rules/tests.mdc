@@ -1,0 +1,19 @@
+---
+description: 
+globs: tests/*.**
+alwaysApply: false
+---
+
+# How to write a test
+
+* Despite the best practices, don't create any moks in code. We will be always testing a real implementation with 
+all services involved.
+* The behaviour of CLI tool depends on the environment variables (for example, the hostname of API server). Because
+of that, every file with test case must be using the env variables stored in `.env` file. These parameters can be
+always ascquired via `if err := godotenv.Load(".env"); err != nil {
+  t.Fatalf("Error loading .env file: %v", err)
+  }` code snippet.
+* The reference implementation of the test case is always the same and it can be found in @signup_signing_test.go file.
+Please try to keep other implementations as close to this one as possible unless there are clear instructions
+to do otherwise.
+* Every test case must implement all steps required to test entire use case, always including signup.

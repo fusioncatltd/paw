@@ -40,6 +40,28 @@ func GetCLIRouter() *cli.Command {
 				},
 				Action: actions.SignUpAction,
 			},
+			{
+				Name:        "signin",
+				Usage:       "Sign in to existing account",
+				Description: "Sign in using email and password",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "email",
+						Usage:    "User's email address",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "password",
+						Usage:    "User's password",
+						Required: true,
+					},
+					&cli.BoolFlag{
+						Name:  "save-token",
+						Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
+					},
+				},
+				Action: actions.SignInAction,
+			},
 		},
 	}
 
