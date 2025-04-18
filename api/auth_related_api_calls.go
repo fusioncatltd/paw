@@ -8,6 +8,12 @@ import (
 	"net/http"
 )
 
+type UserInfoAPIResponse struct {
+	ID     string `json:"id"`
+	Handle string `json:"handle"`
+	Status string `json:"status"`
+}
+
 func (c *FCApiClient) SignUp(email, password string) error {
 	type SignupRequest struct {
 		Email    string `json:"email"`
@@ -111,4 +117,39 @@ func (c *FCApiClient) SignIn(email, password string) error {
 
 	c.setAuthorization(authHeader)
 	return nil
+}
+
+func (c *FCApiClient) GetPersonalInfo() (*UserInfoAPIResponse, error) {
+	url := fmt.Sprintf("%sv1/protected/me", c.host)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(bodyBytes),
+		}
+	}
+
+	var userInfo UserInfoAPIResponse
+	if err := json.Unmarshal(bodyBytes, &userInfo); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &userInfo, nil
 }

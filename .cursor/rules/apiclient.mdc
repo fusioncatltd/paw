@@ -1,0 +1,13 @@
+---
+description: 
+globs: api/*.**
+alwaysApply: false
+---
+
+# API Client
+
+All API-client related function are stored in separate folder.
+Please follow the reference implementation which can be found in @auth_related_api_calls.
+
+When creating structs which are representing API responses, please add `APIResponse` suffix to the struct name.
+For example, `ProjectAPIResponse` or `UserAPIResponse`.

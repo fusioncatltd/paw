@@ -1,19 +1,50 @@
 package tests
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"github.com/fusioncatalyst/paw/actions"
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v3"
+	"io"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/fusioncatalyst/paw/actions"
-	"github.com/joho/godotenv"
-	"github.com/urfave/cli/v3"
 )
+
+func captureOutput(f func(context.Context, *cli.Command) error, ctx context.Context, cmd *cli.Command) (string, error) {
+	// 1) keep a reference to the real stdout
+	oldStdout := os.Stdout
+
+	// 2) create a pipe
+	r, w, err := os.Pipe()
+	if err != nil {
+		panic("could not create pipe: " + err.Error())
+	}
+
+	// 3) redirect stdout to the pipe writer
+	os.Stdout = w
+
+	// run the function
+	err = f(ctx, cmd)
+
+	// 4) close writer, restore stdout
+	w.Close()
+	os.Stdout = oldStdout
+
+	// 5) read the captured output
+	var buf bytes.Buffer
+	if _, err := io.Copy(&buf, r); err != nil {
+		panic("could not read captured output: " + err.Error())
+	}
+	r.Close()
+
+	return buf.String(), err
+}
 
 func TestProjectsAction(t *testing.T) {
 	// Load .env file
@@ -38,124 +69,74 @@ func TestProjectsAction(t *testing.T) {
 		t.Fatalf("Failed to change to temp dir: %v", err)
 	}
 
-	// Generate unique email for signup
 	currentTimestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	newUniqueEmail := fmt.Sprintf("testmail%s@testmail.com", currentTimestamp)
 	testPassword := "password123"
 
-	// Test cases
-	testCases := []struct {
-		name                         string
-		action                       func(context.Context, *cli.Command) error
-		setup                        func() error
-		expectedErrorToContainString *string
-	}{
-		{
-			name:   "signup first to get token",
-			action: actions.SignUpAction,
-			setup: func() error {
-				return nil
+	t.Run("List projects without access token", func(t *testing.T) {
+		_, err := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		assert.Contains(t, err.Error(), "401", "Expected 401 error when no access token is set")
+	})
+
+	t.Run("Sign up", func(t *testing.T) {
+		output, _ := captureOutput(actions.SignUpAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "email",
+					Value: newUniqueEmail,
+				},
+				&cli.StringFlag{
+					Name:  "password",
+					Value: testPassword,
+				},
+				&cli.BoolFlag{
+					Name:  "save-token",
+					Value: false,
+				},
 			},
-			expectedErrorToContainString: nil,
-		},
-		{
-			name:   "list projects with valid token",
-			action: actions.ListProjectsAction,
-			setup: func() error {
-				return nil
-			},
-			expectedErrorToContainString: nil,
-		},
-		{
-			name:   "list projects without token",
-			action: actions.ListProjectsAction,
-			setup: func() error {
-				// Clear the token
-				os.Unsetenv("FC_ACCESS_TOKEN")
-				return nil
-			},
-			expectedErrorToContainString: stringPtr("401"), // Expecting unauthorized error
-		},
-	}
-
-	// Capture original stdout
-	oldStdout := os.Stdout
-
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			// Setup test environment
-			if err := tt.setup(); err != nil {
-				t.Fatalf("Setup failed: %v", err)
-			}
-
-			var cmd *cli.Command
-			if tt.name == "signup first to get token" {
-				// Create a pipe to capture stdout
-				r, w, err := os.Pipe()
-				if err != nil {
-					t.Fatalf("Failed to create pipe: %v", err)
-				}
-				os.Stdout = w
-
-				// Setup signup command
-				cmd = &cli.Command{
-					Flags: []cli.Flag{
-						&cli.StringFlag{
-							Name:  "email",
-							Value: newUniqueEmail,
-						},
-						&cli.StringFlag{
-							Name:  "password",
-							Value: testPassword,
-						},
-						&cli.BoolFlag{
-							Name:  "save-token",
-							Value: true,
-						},
-					},
-				}
-
-				// Run the action
-				err = tt.action(context.Background(), cmd)
-
-				// Close the write end of the pipe
-				w.Close()
-
-				// Read the captured output
-				output, err := ioutil.ReadAll(r)
-				if err != nil {
-					t.Fatalf("Failed to read captured output: %v", err)
-				}
-
-				// Restore stdout
-				os.Stdout = oldStdout
-
-				// Store the captured token in environment
-				token := strings.TrimSpace(string(output))
-				if token != "" {
-					if err := os.Setenv("FC_ACCESS_TOKEN", token); err != nil {
-						t.Fatalf("Failed to store token in environment: %v", err)
-					}
-				}
-			} else {
-				// Setup projects command
-				cmd = &cli.Command{}
-				// Run the action
-				err = tt.action(context.Background(), cmd)
-			}
-
-			// Check error
-			if tt.expectedErrorToContainString != nil {
-				if err == nil {
-					t.Errorf("Expected error containing %v, got nil", *tt.expectedErrorToContainString)
-				} else if !strings.Contains(err.Error(), *tt.expectedErrorToContainString) {
-					t.Errorf("Expected error to contain %v, got %v", *tt.expectedErrorToContainString, err)
-				}
-			} else if err != nil {
-				t.Errorf("Unexpected error: %v", err)
-			}
 		})
-	}
+
+		token := strings.TrimSpace(string(output))
+		if token != "" {
+			if err := os.Setenv("FC_ACCESS_TOKEN", token); err != nil {
+				t.Fatalf("Failed to store token in environment: %v", err)
+			}
+		}
+	})
+
+	t.Run("List projects with access tokens (but there is not projects yet", func(t *testing.T) {
+		output, _ := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		assert.Contains(t, output, "No projects found", "Expected not to see any projects")
+	})
+
+	t.Run("Create a new project", func(t *testing.T) {
+		_, err := captureOutput(actions.CreateNewProject, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "name",
+					Value: "TestProject",
+				},
+				&cli.StringFlag{
+					Name:  "belongs-to",
+					Value: "user",
+				},
+				&cli.StringFlag{
+					Name:  "description",
+					Value: "Test project description",
+				},
+				&cli.BoolFlag{
+					Name:  "private",
+					Value: true,
+				},
+			},
+		})
+		assert.Nil(t, err)
+	})
+
+	t.Run("List projects after creation. TestProject should be in the list", func(t *testing.T) {
+		output, _ := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		assert.Contains(t, output, "TestProject", "Expected to see TestProject in the list of projects")
+	})
 }
 
 // Helper function to create string pointer
