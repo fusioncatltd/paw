@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/fusioncatalyst/paw/actions"
+	"github.com/fusioncatalyst/paw/utils"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v3"
 )
@@ -43,7 +44,7 @@ func TestSignUpAndSignInAction(t *testing.T) {
 
 	expextintgAuthErrorCode := "401"
 
-	// Define test cases for both signup and signin
+	// Define test cases for signup, signin, and me action
 	testCases := []struct {
 		name                         string
 		action                       func(context.Context, *cli.Command) error
@@ -63,11 +64,34 @@ func TestSignUpAndSignInAction(t *testing.T) {
 					Name:  "password",
 					Value: testPassword,
 				},
+				&cli.BoolFlag{
+					Name:  "save-token",
+					Value: true, // Save token for subsequent me action test
+				},
 			},
 			setup: func() error {
 				return nil
 			},
 			expectedErrorToContainString: nil,
+		},
+		{
+			name:   "get personal info with valid token",
+			action: actions.MeAction,
+			flags:  []cli.Flag{}, // MeAction doesn't require flags
+			setup: func() error {
+				return nil
+			},
+			expectedErrorToContainString: nil,
+		},
+		{
+			name:   "get personal info without token",
+			action: actions.MeAction,
+			flags:  []cli.Flag{},
+			setup: func() error {
+				// Clear the token before this test
+				return os.Unsetenv("FC_ACCESS_TOKEN")
+			},
+			expectedErrorToContainString: &expextintgAuthErrorCode,
 		},
 		{
 			name:   "successful signin with created account",
@@ -132,17 +156,39 @@ func TestSignUpAndSignInAction(t *testing.T) {
 				t.Fatalf("Setup failed: %v", err)
 			}
 
-			// Run the action
-			err := tt.action(context.Background(), &cli.Command{
-				Flags: tt.flags,
-			})
+			// Capture output for me action to verify response format
+			var output string
+			var err error
+
+			if tt.name == "get personal info with valid token" {
+				// Capture and verify the output for me action
+				outputBytes, captureErr := utils.CaptureOutputInTests(tt.action, context.Background(), &cli.Command{
+					Flags: tt.flags,
+				})
+				output = string(outputBytes)
+				err = captureErr
+
+				// Verify the output contains expected user info fields
+				if err == nil {
+					if !strings.Contains(output, `"id"`) ||
+						!strings.Contains(output, `"handle"`) ||
+						!strings.Contains(output, `"status"`) {
+						t.Error("Expected output to contain user info fields (id, handle, status)")
+					}
+				}
+			} else {
+				// Regular execution for other actions
+				err = tt.action(context.Background(), &cli.Command{
+					Flags: tt.flags,
+				})
+			}
 
 			// Check error
 			if tt.expectedErrorToContainString != nil {
 				if err == nil {
 					t.Errorf("Expected error code %v, got nil", tt.expectedErrorToContainString)
 				} else if !strings.Contains(err.Error(), *tt.expectedErrorToContainString) {
-					t.Errorf("Expected error to contain  %v, got %v", *tt.expectedErrorToContainString, err)
+					t.Errorf("Expected error to contain %v, got %v", *tt.expectedErrorToContainString, err)
 				}
 			} else if err != nil {
 				t.Errorf("Unexpected error: %v", err)

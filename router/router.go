@@ -117,6 +117,12 @@ func GetCLIRouter() *cli.Command {
 					},
 				},
 			},
+			{
+				Name:        "me",
+				Usage:       "paw me",
+				Description: "Returns the information about authentication token owner",
+				Action:      actions.MeAction,
+			},
 		},
 	}
 
