@@ -72,7 +72,7 @@ func GetCLIRouter() *cli.Command {
 				Name:        "new-project",
 				Usage:       "Create a new project",
 				Description: "Create a new project with the specified name and description",
-				Action:      actions.CreateNewProject,
+				Action:      actions.CreateNewProjectAction,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "name",
@@ -96,6 +96,24 @@ func GetCLIRouter() *cli.Command {
 					&cli.StringFlag{
 						Name:  "description",
 						Usage: "Optional description of the project",
+					},
+				},
+			},
+			{
+				Name:        "import-project",
+				Usage:       "Import project from dec",
+				Description: "Create a new project with the specified name and description",
+				Action:      actions.CreateNewProjectAction,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "project-id",
+						Usage:    "The id of the project",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "file",
+						Usage:    "Path to the file with project definition",
+						Required: true,
 					},
 				},
 			},

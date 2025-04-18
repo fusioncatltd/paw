@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/fusioncatalyst/paw/api"
 	"github.com/urfave/cli/v3"
@@ -41,7 +42,7 @@ func ListProjectsAction(_ context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func CreateNewProject(_ context.Context, cmd *cli.Command) error {
+func CreateNewProjectAction(_ context.Context, cmd *cli.Command) error {
 	// Get required parameters from flags
 	name := cmd.String("name")
 	belongsTo := cmd.String("belongs-to")
@@ -89,6 +90,41 @@ func CreateNewProject(_ context.Context, cmd *cli.Command) error {
 			return cli.Exit(fmt.Sprintf("Failed to create project: %s", apiErr), 1)
 		}
 		return cli.Exit(fmt.Sprintf("Failed to create project: %v", err), 1)
+	}
+
+	// Format output as JSON for consistency
+	jsonData, err := json.MarshalIndent(project, "", "  ")
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to format project data: %v", err), 1)
+	}
+
+	fmt.Println(string(jsonData))
+	return nil
+}
+
+func ImportProjectAction(_ context.Context, cmd *cli.Command) error {
+	// Get required parameters from flags
+	projectID := cmd.String("project-id")
+	filePath := cmd.String("file")
+
+	// Verify file exists before making API call
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return cli.Exit(fmt.Sprintf("File not found: %s", filePath), 1)
+	}
+
+	// Initialize API client
+	client, err := api.NewFCApiClient()
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err), 1)
+	}
+
+	// Import project using API client
+	project, err := client.ImportProject(projectID, filePath)
+	if err != nil {
+		if apiErr, ok := err.(*api.APIError); ok {
+			return cli.Exit(fmt.Sprintf("Failed to import project: %s", apiErr), 1)
+		}
+		return cli.Exit(fmt.Sprintf("Failed to import project: %v", err), 1)
 	}
 
 	// Format output as JSON for consistency

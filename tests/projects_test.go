@@ -1,50 +1,20 @@
 package tests
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"github.com/fusioncatalyst/paw/actions"
-	"github.com/joho/godotenv"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v3"
-	"io"
+	"github.com/fusioncatalyst/paw/utils"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/fusioncatalyst/paw/actions"
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v3"
 )
-
-func captureOutput(f func(context.Context, *cli.Command) error, ctx context.Context, cmd *cli.Command) (string, error) {
-	// 1) keep a reference to the real stdout
-	oldStdout := os.Stdout
-
-	// 2) create a pipe
-	r, w, err := os.Pipe()
-	if err != nil {
-		panic("could not create pipe: " + err.Error())
-	}
-
-	// 3) redirect stdout to the pipe writer
-	os.Stdout = w
-
-	// run the function
-	err = f(ctx, cmd)
-
-	// 4) close writer, restore stdout
-	w.Close()
-	os.Stdout = oldStdout
-
-	// 5) read the captured output
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, r); err != nil {
-		panic("could not read captured output: " + err.Error())
-	}
-	r.Close()
-
-	return buf.String(), err
-}
 
 func TestProjectsAction(t *testing.T) {
 	// Load .env file
@@ -74,12 +44,12 @@ func TestProjectsAction(t *testing.T) {
 	testPassword := "password123"
 
 	t.Run("List projects without access token", func(t *testing.T) {
-		_, err := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		_, err := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
 		assert.Contains(t, err.Error(), "401", "Expected 401 error when no access token is set")
 	})
 
 	t.Run("Sign up", func(t *testing.T) {
-		output, _ := captureOutput(actions.SignUpAction, context.Background(), &cli.Command{
+		output, _ := utils.CaptureOutputInTests(actions.SignUpAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "email",
@@ -105,12 +75,12 @@ func TestProjectsAction(t *testing.T) {
 	})
 
 	t.Run("List projects with access tokens (but there is not projects yet", func(t *testing.T) {
-		output, _ := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
 		assert.Contains(t, output, "No projects found", "Expected not to see any projects")
 	})
 
 	t.Run("Create a new project", func(t *testing.T) {
-		_, err := captureOutput(actions.CreateNewProject, context.Background(), &cli.Command{
+		_, err := utils.CaptureOutputInTests(actions.CreateNewProjectAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "name",
@@ -134,12 +104,7 @@ func TestProjectsAction(t *testing.T) {
 	})
 
 	t.Run("List projects after creation. TestProject should be in the list", func(t *testing.T) {
-		output, _ := captureOutput(actions.ListProjectsAction, context.Background(), nil)
+		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
 		assert.Contains(t, output, "TestProject", "Expected to see TestProject in the list of projects")
 	})
-}
-
-// Helper function to create string pointer
-func stringPtr(s string) *string {
-	return &s
 }
