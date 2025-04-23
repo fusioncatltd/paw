@@ -103,7 +103,7 @@ func GetCLIRouter() *cli.Command {
 				Name:        "import-project",
 				Usage:       "Import project from dec",
 				Description: "Create a new project with the specified name and description",
-				Action:      actions.CreateNewProjectAction,
+				Action:      actions.ImportProjectAction,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "project-id",

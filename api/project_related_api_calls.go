@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
 type ProjectAPIResponse struct {
@@ -114,44 +112,34 @@ func (c *FCApiClient) CreateProject(
 
 // ImportProject uploads a file to the specified project and processes the import
 func (c *FCApiClient) ImportProject(projectID string, filePath string) (*ProjectAPIResponse, error) {
-	// First, verify the file exists
-	file, err := os.Open(filePath)
+	// First, verify and read the file
+	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	// Create a new pipe writer for the multipart form
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	// Create the form file field
-	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create form file: %w", err)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	// Copy the file content to the form field
-	_, err = io.Copy(part, file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to copy file content: %w", err)
+	// Create request body with file content as text
+	reqBody := struct {
+		YAML string `json:"yaml"`
+	}{
+		YAML: string(fileContent),
 	}
 
-	// Close the multipart writer
-	err = writer.Close()
+	// Marshal the request body to JSON
+	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	// Create the request
 	url := fmt.Sprintf("%sv1/protected/projects/%s/imports", c.host, projectID)
-	req, err := http.NewRequest(http.MethodPost, url, body)
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Set the content type to multipart form data
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	// Set headers
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	// Send the request

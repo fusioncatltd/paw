@@ -73,7 +73,10 @@ func CreateNewProjectAction(_ context.Context, cmd *cli.Command) error {
 	if belongsTo == "workspace" {
 		createdByID = workspaceID
 	} else {
-		userData, _ := client.GetPersonalInfo()
+		userData, personalInfoError := client.GetPersonalInfo()
+		if personalInfoError != nil {
+			return personalInfoError
+		}
 		createdByID = userData.ID
 	}
 
