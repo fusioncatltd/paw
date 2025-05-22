@@ -5,6 +5,7 @@ import (
 	"context"
 	"github.com/urfave/cli/v3"
 	"io"
+	"log"
 	"os"
 )
 
@@ -36,4 +37,24 @@ func CaptureOutputInTests(f func(context.Context, *cli.Command) error, ctx conte
 	r.Close()
 
 	return buf.String(), err
+}
+
+func Cleanup() {
+	tempDir, err := os.MkdirTemp("", "paw-test-*")
+	if err != nil {
+		log.Fatal("Failed to create temp dir: %v", err)
+	}
+
+	// Remove all contents of the temp directory
+	if err := os.RemoveAll(tempDir); err != nil {
+		log.Fatal("Failed to clean temp dir: %v", err)
+	}
+	// Recreate the empty temp directory
+	if err := os.Mkdir(tempDir, 0755); err != nil {
+		log.Fatal("Failed to recreate temp dir: %v", err)
+	}
+	// Change back to the temp directory
+	if err := os.Chdir(tempDir); err != nil {
+		log.Fatal("Failed to change to temp dir: %v", err)
+	}
 }

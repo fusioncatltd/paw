@@ -19,28 +19,8 @@ func TestInitDefaultSettingsFileAction(t *testing.T) {
 		t.Fatalf("Error loading .env file: %v", err)
 	}
 
-	cleanup := func() {
-		tempDir, err := os.MkdirTemp("", "paw-test-*")
-		if err != nil {
-			t.Fatalf("Failed to create temp dir: %v", err)
-		}
-
-		// Remove all contents of the temp directory
-		if err := os.RemoveAll(tempDir); err != nil {
-			t.Fatalf("Failed to clean temp dir: %v", err)
-		}
-		// Recreate the empty temp directory
-		if err := os.Mkdir(tempDir, 0755); err != nil {
-			t.Fatalf("Failed to recreate temp dir: %v", err)
-		}
-		// Change back to the temp directory
-		if err := os.Chdir(tempDir); err != nil {
-			t.Fatalf("Failed to change to temp dir: %v", err)
-		}
-	}
-
 	t.Run("create settings file with default values", func(t *testing.T) {
-		cleanup()
+		utils.Cleanup()
 		cmd := &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -73,7 +53,7 @@ func TestInitDefaultSettingsFileAction(t *testing.T) {
 	})
 
 	t.Run("create settings file with custom values", func(t *testing.T) {
-		cleanup()
+		utils.Cleanup()
 		cmd := &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -107,7 +87,7 @@ func TestInitDefaultSettingsFileAction(t *testing.T) {
 
 	t.Run("file already exists", func(t *testing.T) {
 		// Create the file first
-		cleanup()
+		utils.Cleanup()
 		file, err := os.Create("fcsettings.yaml")
 		assert.NoError(t, err)
 		file.Close()
@@ -133,7 +113,7 @@ func TestInitDefaultSettingsFileAction(t *testing.T) {
 	})
 
 	t.Run("invalid language value", func(t *testing.T) {
-		cleanup()
+		utils.Cleanup()
 		cmd := &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
