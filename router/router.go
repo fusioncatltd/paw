@@ -104,20 +104,6 @@ func GetCLIRouter() *cli.Command {
 							},
 						},
 					},
-				},
-			},
-			{
-				Name:        "project",
-				Usage:       "Manage project operations",
-				Description: "Perform operations on a specific project",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "project-id",
-						Usage:    "The ID of the project to operate on",
-						Required: true,
-					},
-				},
-				Commands: []*cli.Command{
 					{
 						Name:        "import",
 						Usage:       "Import project from file",
@@ -126,6 +112,11 @@ func GetCLIRouter() *cli.Command {
 							&cli.StringFlag{
 								Name:     "file",
 								Usage:    "Path to the file with project definition",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to operate on",
 								Required: true,
 							},
 						},
@@ -139,6 +130,11 @@ func GetCLIRouter() *cli.Command {
 							&cli.StringFlag{
 								Name:     "app-id",
 								Usage:    "The ID of the application to generate code for",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to operate on",
 								Required: true,
 							},
 						},

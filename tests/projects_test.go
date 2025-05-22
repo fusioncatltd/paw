@@ -3,12 +3,13 @@ package tests
 import (
 	"context"
 	"fmt"
-	"github.com/fusioncatalyst/paw/utils"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/fusioncatalyst/paw/utils"
 
 	"github.com/fusioncatalyst/paw/actions"
 	"github.com/joho/godotenv"
@@ -44,7 +45,18 @@ func TestProjectsAction(t *testing.T) {
 	testPassword := "password123"
 
 	t.Run("List projects without access token", func(t *testing.T) {
-		_, err := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
+		// Create projects command with list subcommand
+		projectsCmd := &cli.Command{
+			Name: "projects",
+			Commands: []*cli.Command{
+				{
+					Name:   "list",
+					Action: actions.ListProjectsAction,
+				},
+			},
+		}
+
+		_, err := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), projectsCmd.Commands[0])
 		assert.Contains(t, err.Error(), "401", "Expected 401 error when no access token is set")
 	})
 
@@ -75,36 +87,68 @@ func TestProjectsAction(t *testing.T) {
 	})
 
 	t.Run("List projects with access tokens (but there is not projects yet", func(t *testing.T) {
-		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
+		// Create projects command with list subcommand
+		projectsCmd := &cli.Command{
+			Name: "projects",
+			Commands: []*cli.Command{
+				{
+					Name:   "list",
+					Action: actions.ListProjectsAction,
+				},
+			},
+		}
+
+		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), projectsCmd.Commands[0])
 		assert.Contains(t, output, "No projects found", "Expected not to see any projects")
 	})
 
 	t.Run("Create a new project", func(t *testing.T) {
-		_, err := utils.CaptureOutputInTests(actions.CreateNewProjectAction, context.Background(), &cli.Command{
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:  "name",
-					Value: "TestProject",
-				},
-				&cli.StringFlag{
-					Name:  "belongs-to",
-					Value: "user",
-				},
-				&cli.StringFlag{
-					Name:  "description",
-					Value: "Test project description",
-				},
-				&cli.BoolFlag{
-					Name:  "private",
-					Value: true,
+		// Create projects command with new subcommand
+		projectsCmd := &cli.Command{
+			Name: "projects",
+			Commands: []*cli.Command{
+				{
+					Name: "new",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:  "name",
+							Value: "TestProject",
+						},
+						&cli.StringFlag{
+							Name:  "belongs-to",
+							Value: "user",
+						},
+						&cli.StringFlag{
+							Name:  "description",
+							Value: "Test project description",
+						},
+						&cli.BoolFlag{
+							Name:  "private",
+							Value: true,
+						},
+					},
+					Action: actions.CreateNewProjectAction,
 				},
 			},
-		})
+		}
+
+		_, err := utils.CaptureOutputInTests(actions.CreateNewProjectAction, context.Background(), projectsCmd.Commands[0])
 		assert.Nil(t, err)
 	})
 
 	t.Run("List projects after creation. TestProject should be in the list", func(t *testing.T) {
-		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), nil)
+		// Create projects command with list subcommand
+		projectsCmd := &cli.Command{
+			Name: "projects",
+			Commands: []*cli.Command{
+				{
+					Name:   "list",
+					Action: actions.ListProjectsAction,
+				},
+			},
+		}
+
+		output, _ := utils.CaptureOutputInTests(actions.ListProjectsAction, context.Background(), projectsCmd.Commands[0])
 		assert.Contains(t, output, "TestProject", "Expected to see TestProject in the list of projects")
 	})
 }
