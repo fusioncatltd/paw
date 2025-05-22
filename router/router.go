@@ -22,16 +22,8 @@ func GetCLIRouter() *cli.Command {
 						Usage: "Server URL (e.g., https://api.fusioncat.dev)",
 					},
 					&cli.StringFlag{
-						Name:  "output-folder",
-						Usage: "Output folder for generated models",
-					},
-					&cli.StringFlag{
 						Name:  "language",
 						Usage: "Target language (typescript, python, java, go)",
-					},
-					&cli.StringFlag{
-						Name:  "class-suffix",
-						Usage: "Suffix for generated classes",
 					},
 				},
 				Action: actions.InitDefaultSettingsFileAction,

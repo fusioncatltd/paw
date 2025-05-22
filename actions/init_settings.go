@@ -21,17 +21,13 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 		SyntaxVersion: 1,
 		Server:        "https://api.fusioncat.dev",
 		CodeGeneration: contracts.CodeGeneration{
-			OutputFolder: "./fuscioncat",
-			Language:     "typescript",
-			ClassSuffix:  "FusionCatModel",
+			Language: "typescript",
 		},
 	}
 
 	// Get values from CLI flags if provided
 	server := cmd.String("server")
-	outputFolder := cmd.String("output-folder")
 	language := cmd.String("language")
-	classSuffix := cmd.String("class-suffix")
 
 	// Prepare questions for missing values
 	var questions []*survey.Question
@@ -47,19 +43,6 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 		})
 	} else {
 		config.Server = server
-	}
-
-	// Output Folder
-	if outputFolder == "" {
-		questions = append(questions, &survey.Question{
-			Name: "outputFolder",
-			Prompt: &survey.Input{
-				Message: "Enter the output folder for generated models:",
-				Default: config.CodeGeneration.OutputFolder,
-			},
-		})
-	} else {
-		config.CodeGeneration.OutputFolder = outputFolder
 	}
 
 	// Language
@@ -86,26 +69,11 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 		config.CodeGeneration.Language = language
 	}
 
-	// Class Suffix
-	if classSuffix == "" {
-		questions = append(questions, &survey.Question{
-			Name: "classSuffix",
-			Prompt: &survey.Input{
-				Message: "Enter the suffix for generated classes:",
-				Default: config.CodeGeneration.ClassSuffix,
-			},
-		})
-	} else {
-		config.CodeGeneration.ClassSuffix = classSuffix
-	}
-
 	// If there are any missing values, ask for them interactively
 	if len(questions) > 0 {
 		answers := struct {
-			Server       string
-			OutputFolder string
-			Language     string
-			ClassSuffix  string
+			Server   string
+			Language string
 		}{}
 
 		if err := survey.Ask(questions, &answers); err != nil {
@@ -116,14 +84,8 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 		if server == "" {
 			config.Server = answers.Server
 		}
-		if outputFolder == "" {
-			config.CodeGeneration.OutputFolder = answers.OutputFolder
-		}
 		if language == "" {
 			config.CodeGeneration.Language = answers.Language
-		}
-		if classSuffix == "" {
-			config.CodeGeneration.ClassSuffix = answers.ClassSuffix
 		}
 	}
 
