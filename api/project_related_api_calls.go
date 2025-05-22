@@ -111,11 +111,11 @@ func (c *FCApiClient) CreateProject(
 }
 
 // ImportProject uploads a file to the specified project and processes the import
-func (c *FCApiClient) ImportProject(projectID string, filePath string) (*ProjectAPIResponse, error) {
+func (c *FCApiClient) ImportProject(projectID string, filePath string) error {
 	// First, verify and read the file
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+		return fmt.Errorf("failed to read file: %w", err)
 	}
 
 	// Create request body with file content as text
@@ -128,14 +128,14 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) (*Project
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	// Create the request
 	url := fmt.Sprintf("%sv1/protected/projects/%s/imports", c.host, projectID)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Set headers
@@ -145,31 +145,25 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) (*Project
 	// Send the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Read response body
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return fmt.Errorf("failed to read response body: %w", err)
 	}
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		return nil, &APIError{
+		return &APIError{
 			StatusCode: resp.StatusCode,
 			Body:       string(bodyBytes),
 		}
 	}
 
-	// Parse the response
-	var project ProjectAPIResponse
-	if err := json.Unmarshal(bodyBytes, &project); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &project, nil
+	return nil
 }
 
 // GenerateCode generates code for a specific application in a project

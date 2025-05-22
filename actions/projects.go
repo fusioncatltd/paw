@@ -122,7 +122,7 @@ func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Import project using API client
-	project, err := client.ImportProject(projectID, filePath)
+	err = client.ImportProject(projectID, filePath)
 	if err != nil {
 		if apiErr, ok := err.(*api.APIError); ok {
 			return cli.Exit(fmt.Sprintf("Failed to import project: %s", apiErr), 1)
@@ -130,13 +130,6 @@ func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
 		return cli.Exit(fmt.Sprintf("Failed to import project: %v", err), 1)
 	}
 
-	// Format output as JSON for consistency
-	jsonData, err := json.MarshalIndent(project, "", "  ")
-	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to format project data: %v", err), 1)
-	}
-
-	fmt.Println(string(jsonData))
 	return nil
 }
 
