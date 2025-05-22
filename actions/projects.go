@@ -106,9 +106,9 @@ func CreateNewProjectAction(_ context.Context, cmd *cli.Command) error {
 }
 
 func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
-	// Get project ID from parent command
-	projectID := cmd.Parent().Flags()[0].Value.String()
-	filePath := cmd.Flags()[0].Value.String()
+	// Get project ID and file path from context
+	projectID := ctx.Value("project-id").(string)
+	filePath := ctx.Value("file").(string)
 
 	// Verify file exists before making API call
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -141,9 +141,9 @@ func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
 }
 
 func GenerateCodeAction(ctx context.Context, cmd *cli.Command) error {
-	// Get project ID from parent command
-	projectID := cmd.Parent().Flags()[0].Value.String()
-	appID := cmd.Flags()[0].Value.String()
+	// Get project ID and app ID from context
+	projectID := ctx.Value("project-id").(string)
+	appID := ctx.Value("app-id").(string)
 
 	// Initialize API client
 	client, err := api.NewFCApiClient()

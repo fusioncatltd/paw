@@ -88,18 +88,17 @@ func TestImportProjectAction(t *testing.T) {
 
 	t.Run("Import project with valid file", func(t *testing.T) {
 		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
-		output, err := utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:  "project-id",
-					Value: projectID,
-				},
-				&cli.StringFlag{
-					Name:  "file",
-					Value: validImportFilePathOriginal, // Use the temp file path
-				},
-			},
-		})
+
+		// Create context with required values
+		ctx := context.WithValue(context.Background(), "project-id", projectID)
+		ctx = context.WithValue(ctx, "file", validImportFilePathOriginal)
+
+		// Create import command
+		importCmd := &cli.Command{
+			Name: "import",
+		}
+
+		output, err := utils.CaptureOutputInTests(actions.ImportProjectAction, ctx, importCmd)
 		assert.Nil(t, err, "Import project with valid file failed")
 
 		// Optional: Verify the output contains expected info (e.g., project ID)
@@ -112,18 +111,17 @@ func TestImportProjectAction(t *testing.T) {
 
 	t.Run("Import project with non-existent file", func(t *testing.T) {
 		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
-		_, err := utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:  "project-id",
-					Value: projectID,
-				},
-				&cli.StringFlag{
-					Name:  "file",
-					Value: "non-existent-file.yaml",
-				},
-			},
-		})
+
+		// Create context with required values
+		ctx := context.WithValue(context.Background(), "project-id", projectID)
+		ctx = context.WithValue(ctx, "file", "non-existent-file.yaml")
+
+		// Create import command
+		importCmd := &cli.Command{
+			Name: "import",
+		}
+
+		_, err := utils.CaptureOutputInTests(actions.ImportProjectAction, ctx, importCmd)
 		assert.NotNil(t, err, "Expected an error for non-existent file")
 		assert.Contains(t, err.Error(), "File not found", "Error message should indicate file not found")
 	})

@@ -2,19 +2,92 @@
 version: 1
 
 servers:
-  - name: main_kafka
-    type: kafka
+  - name: mainkafka
+    type: async+kafka
     description: "Main Kafka message broker"
-    channels:
+    resources:
       - name: emails
+        mode: readwrite
+        type: topic
+        description: emails
       - name: notifications
+        mode: readwrite
+        type: topic
+        description: notifications
+      - name: user_events
+        mode: readwrite
+        type: topic
+        description: user_events
+      - name: payment_events
+        mode: readwrite
+        type: topic
+        description: payment_events
+      - name: analytics
+        mode: readwrite
+        type: topic
+        description: analytics
 
-  - name: rest_api
-    type: rest
-    description: "REST API server"
-    channels:
-      - name: user_api
-      - name: admin_api
+  - name: mainrmq
+    type: async+amqp
+    description: "Main RabbitMQ server"
+    resources:
+      - name: mainexchange
+        mode: write
+        type: exchange
+        description: mainexchange
+      - name: mainqueue
+        mode: read
+        type: queue
+        description: mainqueue
+      - name: paymentexchange
+        mode: write
+        type: exchange
+        description: paymentexchange
+      - name: paymentqueue
+        mode: read
+        type: queue
+        description: paymentqueue
+      - name: notificationexchange
+        mode: write
+        type: exchange
+        description: notificationexchange
+      - name: notificationqueue
+        mode: read
+        type: queue
+        description: notificationqueue
+    binds:
+      - source: mainexchange
+        target: mainqueue
+      - source: paymentexchange
+        target: paymentqueue
+      - source: notificationexchange
+        target: notificationqueue
+
+  - name: backupkafka
+    type: async+kafka
+    description: "Backup Kafka cluster"
+    resources:
+      - name: backup_emails
+        mode: readwrite
+        type: topic
+        description: backup_emails
+      - name: backup_analytics
+        mode: readwrite
+        type: topic
+        description: backup_analytics
+
+  - name: webhookserver
+    type: async+webhook
+    description: "Webhook server for external integrations"
+    resources:
+      - name: stripe_webhook
+        mode: read
+        type: endpoint
+        description: stripe_webhook
+      - name: slack_webhook
+        mode: read
+        type: endpoint
+        description: slack_webhook
 
 schemas:
   - name: "email_schema"
@@ -29,6 +102,24 @@ schemas:
     description: "Schema for notification messages"
     example: "{\"user_id\":\"123\",\"message\":\"Hello world\",\"timestamp\":\"2023-01-01T12:00:00Z\"}"
 
+  - name: "payment_schema"
+    type: "jsonschema"
+    version: 1
+    description: "Schema for payment events"
+    schema: "{\"type\":\"object\",\"properties\":{\"transaction_id\":{\"type\":\"string\"},\"amount\":{\"type\":\"number\"},\"currency\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"}},\"required\":[\"transaction_id\",\"amount\",\"currency\",\"status\"]}"
+
+  - name: "user_event_schema"
+    type: "jsonschema"
+    version: 1
+    description: "Schema for user events"
+    schema: "{\"type\":\"object\",\"properties\":{\"user_id\":{\"type\":\"string\"},\"event_type\":{\"type\":\"string\"},\"timestamp\":{\"type\":\"string\"},\"metadata\":{\"type\":\"object\"}},\"required\":[\"user_id\",\"event_type\",\"timestamp\"]}"
+
+  - name: "analytics_schema"
+    type: "jsonschema"
+    version: 1
+    description: "Schema for analytics data"
+    schema: "{\"type\":\"object\",\"properties\":{\"metric_name\":{\"type\":\"string\"},\"value\":{\"type\":\"number\"},\"dimensions\":{\"type\":\"object\"},\"timestamp\":{\"type\":\"string\"}},\"required\":[\"metric_name\",\"value\",\"timestamp\"]}"
+
 messages:
   - name: "send_email"
     description: "Message for sending emails"
@@ -40,31 +131,75 @@ messages:
     schema:
       name: "notification_schema"
 
+  - name: "process_payment"
+    description: "Message for processing payments"
+    schema:
+      name: "payment_schema"
+
+  - name: "track_user_event"
+    description: "Message for tracking user events"
+    schema:
+      name: "user_event_schema"
+
+  - name: "record_analytics"
+    description: "Message for recording analytics"
+    schema:
+      name: "analytics_schema"
+
 apps:
   - name: "main_backend"
     description: "Main backend application"
     sends:
-      - message:
-          name: "send_email"
-        channel:
-          name: "main_kafka.emails"
-      - message:
-          name: "send_notification"
-        channel:
-          name: "rest_api.user_api"
+      - message: "send_email"
+        resource: "async+kafka://mainkafka@readwrite/topic/emails"
+      - message: "track_user_event"
+        resource: "async+kafka://mainkafka@readwrite/topic/user_events"
+      - message: "process_payment"
+        resource: "async+amqp://mainrmq@write/exchange/paymentexchange"
 
   - name: "mailer"
     description: "Email sending service"
     receives:
-      - message:
-          name: "send_email"
-        channel:
-          name: "main_kafka.emails"
+      - message: "send_email"
+        resource: "async+kafka://mainkafka@readwrite/topic/emails"
+    sends:
+      - message: "record_analytics"
+        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
 
   - name: "notification_service"
     description: "Notification service"
     receives:
-      - message:
-          name: "send_notification"
-        channel:
-          name: "main_kafka.notifications"
+      - message: "send_notification"
+        resource: "async+amqp://mainrmq@read/queue/notificationqueue"
+    sends:
+      - message: "send_notification"
+        resource: "async+amqp://mainrmq@write/exchange/notificationexchange"
+
+  - name: "payment_processor"
+    description: "Payment processing service"
+    receives:
+      - message: "process_payment"
+        resource: "async+amqp://mainrmq@read/queue/paymentqueue"
+    sends:
+      - message: "track_user_event"
+        resource: "async+kafka://mainkafka@readwrite/topic/user_events"
+      - message: "record_analytics"
+        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
+
+  - name: "analytics_service"
+    description: "Analytics processing service"
+    receives:
+      - message: "record_analytics"
+        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
+    sends:
+      - message: "record_analytics"
+        resource: "async+kafka://backupkafka@readwrite/topic/backup_analytics"
+
+  - name: "webhook_handler"
+    description: "Webhook handling service"
+    receives:
+      - message: "process_payment"
+        resource: "async+webhook://webhookserver@read/endpoint/stripe_webhook"
+    sends:
+      - message: "send_notification"
+        resource: "async+amqp://mainrmq@write/exchange/notificationexchange"
