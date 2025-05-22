@@ -100,20 +100,42 @@ func GetCLIRouter() *cli.Command {
 				},
 			},
 			{
-				Name:        "import-project",
-				Usage:       "Import project from dec",
-				Description: "Create a new project with the specified name and description",
-				Action:      actions.ImportProjectAction,
+				Name:        "project",
+				Usage:       "Manage project operations",
+				Description: "Perform operations on a specific project",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "project-id",
-						Usage:    "The id of the project",
+						Usage:    "The ID of the project to operate on",
 						Required: true,
 					},
-					&cli.StringFlag{
-						Name:     "file",
-						Usage:    "Path to the file with project definition",
-						Required: true,
+				},
+				Commands: []*cli.Command{
+					{
+						Name:        "import",
+						Usage:       "Import project from file",
+						Description: "Import project definition from a file",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "file",
+								Usage:    "Path to the file with project definition",
+								Required: true,
+							},
+						},
+						Action: actions.ImportProjectAction,
+					},
+					{
+						Name:        "generate",
+						Usage:       "Generate code for project",
+						Description: "Generate code for a specific application in the project",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "app-id",
+								Usage:    "The ID of the application to generate code for",
+								Required: true,
+							},
+						},
+						Action: actions.GenerateCodeAction,
 					},
 				},
 			},

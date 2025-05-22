@@ -171,3 +171,39 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) (*Project
 
 	return &project, nil
 }
+
+// GenerateCode generates code for a specific application in a project
+func (c *FCApiClient) GenerateCode(projectID string, appID string) (*ProjectAPIResponse, error) {
+	url := fmt.Sprintf("%sv1/protected/projects/%s/apps/%s/generate", c.host, projectID, appID)
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(bodyBytes),
+		}
+	}
+
+	var project ProjectAPIResponse
+	if err := json.Unmarshal(bodyBytes, &project); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &project, nil
+}

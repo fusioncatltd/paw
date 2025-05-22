@@ -105,10 +105,10 @@ func CreateNewProjectAction(_ context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-func ImportProjectAction(_ context.Context, cmd *cli.Command) error {
-	// Get required parameters from flags
-	projectID := cmd.String("project-id")
-	filePath := cmd.String("file")
+func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
+	// Get project ID from parent command
+	projectID := cmd.Parent().Flags()[0].Value.String()
+	filePath := cmd.Flags()[0].Value.String()
 
 	// Verify file exists before making API call
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -128,6 +128,36 @@ func ImportProjectAction(_ context.Context, cmd *cli.Command) error {
 			return cli.Exit(fmt.Sprintf("Failed to import project: %s", apiErr), 1)
 		}
 		return cli.Exit(fmt.Sprintf("Failed to import project: %v", err), 1)
+	}
+
+	// Format output as JSON for consistency
+	jsonData, err := json.MarshalIndent(project, "", "  ")
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to format project data: %v", err), 1)
+	}
+
+	fmt.Println(string(jsonData))
+	return nil
+}
+
+func GenerateCodeAction(ctx context.Context, cmd *cli.Command) error {
+	// Get project ID from parent command
+	projectID := cmd.Parent().Flags()[0].Value.String()
+	appID := cmd.Flags()[0].Value.String()
+
+	// Initialize API client
+	client, err := api.NewFCApiClient()
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err), 1)
+	}
+
+	// Generate code using API client
+	project, err := client.GenerateCode(projectID, appID)
+	if err != nil {
+		if apiErr, ok := err.(*api.APIError); ok {
+			return cli.Exit(fmt.Sprintf("Failed to generate code: %s", apiErr), 1)
+		}
+		return cli.Exit(fmt.Sprintf("Failed to generate code: %v", err), 1)
 	}
 
 	// Format output as JSON for consistency
