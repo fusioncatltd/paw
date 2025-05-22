@@ -1,9 +1,10 @@
 package contracts
 
 type SettingYAMLFile struct {
-	SyntaxVersion  int            `yaml:"syntax_version"`
-	Server         string         `yaml:"server"`
-	CodeGeneration CodeGeneration `yaml:"code_generation"`
+	SyntaxVersion      int            `yaml:"syntaxVersion"`
+	Server             string         `yaml:"server"`
+	CodeGeneration     CodeGeneration `yaml:"codeGeneration"`
+	WorkingWithProject *string        `yaml:"workingWithProject,omitempty"`
 }
 
 type CodeGeneration struct {

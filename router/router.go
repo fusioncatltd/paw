@@ -25,6 +25,10 @@ func GetCLIRouter() *cli.Command {
 						Name:  "language",
 						Usage: "Target language (typescript, python, java, go)",
 					},
+					&cli.StringFlag{
+						Name:  "working-with-project",
+						Usage: "Connect settings file to a specific project (must be a valid UUID)",
+					},
 				},
 				Action: actions.InitDefaultSettingsFileAction,
 			},

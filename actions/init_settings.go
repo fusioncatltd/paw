@@ -3,11 +3,13 @@ package actions
 import (
 	"context"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fusioncatalyst/paw/contracts"
+	"github.com/google/uuid"
 	"github.com/urfave/cli/v3"
 )
 
@@ -28,6 +30,16 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 	// Get values from CLI flags if provided
 	server := cmd.String("server")
 	language := cmd.String("language")
+	projectID := cmd.String("working-with-project")
+
+	// Validate project ID if provided
+	if projectID != "" {
+		// UUID validation
+		if _, err := uuid.Parse(projectID); err != nil {
+			return cli.Exit("Invalid project ID: must be a valid UUID", 1)
+		}
+		config.WorkingWithProject = &projectID
+	}
 
 	// Prepare questions for missing values
 	var questions []*survey.Question
