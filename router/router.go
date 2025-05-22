@@ -16,7 +16,25 @@ func GetCLIRouter() *cli.Command {
 				Name:        "init-settings-file",
 				Usage:       "paw init-settings-file",
 				Description: "Create a settings file with default values",
-				Action:      actions.InitDefaultSettingsFileAction,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "server",
+						Usage: "Server URL (e.g., https://api.fusioncat.dev)",
+					},
+					&cli.StringFlag{
+						Name:  "output-folder",
+						Usage: "Output folder for generated models",
+					},
+					&cli.StringFlag{
+						Name:  "language",
+						Usage: "Target language (typescript, python, java, go)",
+					},
+					&cli.StringFlag{
+						Name:  "class-suffix",
+						Usage: "Suffix for generated classes",
+					},
+				},
+				Action: actions.InitDefaultSettingsFileAction,
 			},
 			{
 				Name:        "signup",
