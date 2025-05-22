@@ -64,38 +64,45 @@ func GetCLIRouter() *cli.Command {
 			},
 			{
 				Name:        "projects",
-				Usage:       "List all projects",
-				Description: "Get information about all projects you have access to",
-				Action:      actions.ListProjectsAction,
-			},
-			{
-				Name:        "new-project",
-				Usage:       "Create a new project",
-				Description: "Create a new project with the specified name and description",
-				Action:      actions.CreateNewProjectAction,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "name",
-						Usage:    "Project name",
-						Required: true,
+				Usage:       "Manage projects",
+				Description: "List, create, and manage projects",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all projects",
+						Description: "Get information about all projects you have access to",
+						Action:      actions.ListProjectsAction,
 					},
-					&cli.BoolFlag{
-						Name:  "private",
-						Usage: "Make the project private",
-					},
-					&cli.StringFlag{
-						Name:     "belongs-to",
-						Usage:    "The project can belong to a user or an workspace (which is a group of users)",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "workspace-id",
-						Usage:    "If project belongs to a workspace, specify the workspace ID",
-						Required: false,
-					},
-					&cli.StringFlag{
-						Name:  "description",
-						Usage: "Optional description of the project",
+					{
+						Name:        "new",
+						Usage:       "Create a new project",
+						Description: "Create a new project with the specified name and description",
+						Action:      actions.CreateNewProjectAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Project name",
+								Required: true,
+							},
+							&cli.BoolFlag{
+								Name:  "private",
+								Usage: "Make the project private",
+							},
+							&cli.StringFlag{
+								Name:     "belongs-to",
+								Usage:    "The project can belong to a user or an workspace (which is a group of users)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "workspace-id",
+								Usage:    "If project belongs to a workspace, specify the workspace ID",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:  "description",
+								Usage: "Optional description of the project",
+							},
+						},
 					},
 				},
 			},
