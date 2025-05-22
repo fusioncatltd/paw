@@ -7,7 +7,5 @@ type SettingYAMLFile struct {
 }
 
 type CodeGeneration struct {
-	OutputFolder string `yaml:"output_folder"`
-	Language     string `yaml:"language"`
-	ClassSuffix  string `yaml:"class_suffix"`
+	Language string `yaml:"language"`
 }

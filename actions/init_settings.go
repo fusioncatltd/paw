@@ -3,12 +3,12 @@ package actions
 import (
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fusioncatalyst/paw/contracts"
 	"github.com/urfave/cli/v3"
-	"gopkg.in/yaml.v3"
 )
 
 func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error {
@@ -89,19 +89,32 @@ func InitDefaultSettingsFileAction(ctx context.Context, cmd *cli.Command) error 
 		}
 	}
 
-	file, err := os.Create("fcsettings.yaml")
+	// 2. Marshal to YAML bytes
+	data, err := yaml.Marshal(&config)
 	if err != nil {
-		return err
+		fmt.Fprintf(os.Stderr, "error marshaling to YAML: %v\n", err)
+		os.Exit(1)
 	}
 
-	defer file.Close()
-
-	encoder := yaml.NewEncoder(file)
-	defer encoder.Close()
-
-	if err := encoder.Encode(config); err != nil {
-		return err
+	// 3. Write the bytes to a file
+	if err := os.WriteFile("fcsettings.yaml", data, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing file: %v\n", err)
+		os.Exit(1)
 	}
+
+	//file, err := os.Create("fcsettings.yaml")
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//defer file.Close()
+	//
+	//encoder := yaml.NewEncoder(file)
+	//defer encoder.Close()
+	//
+	//if err := encoder.Encode(config); err != nil {
+	//	return err
+	//}
 
 	fmt.Println("Configuration file 'fcsettings.yaml' has been created successfully!")
 	return nil
