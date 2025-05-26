@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -21,13 +22,13 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 	// Read settings file
 	data, err := os.ReadFile("fcsettings.yaml")
 	if err != nil {
-		return fmt.Errorf("failed to read settings file: %w", err)
+		return errors.New(fmt.Sprintf("failed to read settings file: %s", err))
 	}
 
 	// Parse settings
 	var settings contracts.SettingYAMLFile
 	if err := yaml.Unmarshal(data, &settings); err != nil {
-		return fmt.Errorf("failed to parse settings file: %w", err)
+		return errors.New(fmt.Sprintf("failed to parse settings file: %s", err))
 	}
 
 	// Get project ID from settings
@@ -44,18 +45,18 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 	// Initialize API client
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return fmt.Errorf("failed to initialize API client: %w", err)
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
 	}
 
 	// Generate code using API
 	code, err := client.GenerateAppCode(appID, settings.CodeGeneration.Language)
 	if err != nil {
-		return fmt.Errorf("failed to generate code: %w", err)
+		return errors.New(fmt.Sprintf("failed to generate code: %s", err))
 	}
 
 	// Create fusioncat directory if it doesn't exist
 	if err := os.MkdirAll("fusioncat", 0755); err != nil {
-		return fmt.Errorf("failed to create fusioncat directory: %w", err)
+		return errors.New(fmt.Sprintf("failed to create fusioncat directory: %s", err))
 	}
 
 	// Generate filename based on app ID and language
@@ -64,7 +65,7 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 	// Write the generated code to file
 	filePath := filepath.Join("fusioncat", fileName)
 	if err := os.WriteFile(filePath, []byte(code), 0644); err != nil {
-		return fmt.Errorf("failed to write generated code to file: %w", err)
+		return errors.New(fmt.Sprintf("failed to write generated code to file: %s", err))
 	}
 
 	fmt.Printf("Code generated successfully and saved to %s\n", filePath)

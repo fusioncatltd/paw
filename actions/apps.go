@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -20,20 +21,20 @@ func ListAppsAction(ctx context.Context, cmd *cli.Command) error {
 	// Initialize API client
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return fmt.Errorf("failed to initialize API client: %w", err)
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
 	}
 
 	// Get list of apps
 	apps, err := client.ListApps(projectID)
 	if err != nil {
-		return fmt.Errorf("failed to list apps: %w", err)
+		return errors.New(fmt.Sprintf("failed to list apps: %s", err))
 	}
 
 	// Print formatted JSON
 	encoder := json.NewEncoder(os.Stdout)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(apps); err != nil {
-		return fmt.Errorf("failed to encode response: %w", err)
+		return errors.New(fmt.Sprintf("failed to encode response: %s", err))
 	}
 
 	return nil

@@ -17,12 +17,12 @@ func SignInAction(_ context.Context, cmd *cli.Command) error {
 	saveToken := cmd.Bool("save-token")
 
 	if email == "" || password == "" {
-		return fmt.Errorf("both email and password are required")
+		return errors.New("both email and password are required")
 	}
 
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return fmt.Errorf("failed to initialize API client: %w", err)
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
 	}
 
 	if err := client.SignIn(email, password); err != nil {

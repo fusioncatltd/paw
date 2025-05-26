@@ -118,16 +118,16 @@ func ImportProjectAction(ctx context.Context, cmd *cli.Command) error {
 	// Initialize API client
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err), 1)
+		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err.Error()), 1)
 	}
 
 	// Import project using API client
 	err = client.ImportProject(projectID, filePath)
 	if err != nil {
 		if apiErr, ok := err.(*api.APIError); ok {
-			return cli.Exit(fmt.Sprintf("Failed to import project: %s", apiErr), 1)
+			return cli.Exit(fmt.Sprintf("Failed to import project: %s", apiErr.Error()), 1)
 		}
-		return cli.Exit(fmt.Sprintf("Failed to import project: %v", err), 1)
+		return cli.Exit(fmt.Sprintf("Failed to import project: %v", err.Error()), 1)
 	}
 
 	return nil

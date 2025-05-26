@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -29,7 +30,12 @@ func TestAppCodegenActions(t *testing.T) {
 	projectName := "TestProjectForImport"
 	var projectID string // To store the ID of the created project
 
+	// Calculate absolute path to import file before changing directory
 	validImportFilePathOriginal := "./testfiles/imports/validImport1.yaml"
+	absImportFilePath, err := filepath.Abs(validImportFilePathOriginal)
+	if err != nil {
+		t.Fatalf("Failed to get absolute path for import file: %v", err)
+	}
 
 	tempDir, _ := os.MkdirTemp("", "paw-test-*")
 	os.Chdir(tempDir)
@@ -101,7 +107,7 @@ func TestAppCodegenActions(t *testing.T) {
 
 		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
 
-		output, _ = utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
+		output, err = utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "project-id",
@@ -109,11 +115,12 @@ func TestAppCodegenActions(t *testing.T) {
 				},
 				&cli.StringFlag{
 					Name:  "file",
-					Value: validImportFilePathOriginal,
+					Value: absImportFilePath,
 				},
 			},
 		})
 		assert.Empty(t, output, "Output should be empty for valid import")
+		assert.Nil(t, err)
 	})
 
 	//t.Run("Generate code for app", func(t *testing.T) {
