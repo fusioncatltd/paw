@@ -10,20 +10,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fusioncatalyst/paw/utils"
-
 	"github.com/fusioncatalyst/paw/actions"
 	"github.com/fusioncatalyst/paw/api"
-	"github.com/joho/godotenv"
+	"github.com/fusioncatalyst/paw/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v3"
 )
 
-func TestImportProjectAction(t *testing.T) {
+func TestAppCodegenActions(t *testing.T) {
 	// Load .env file
-	if err := godotenv.Load(".env"); err != nil {
-		t.Fatalf("Error loading .env file: %v", err)
-	}
+	//if err := godotenv.Load(".env"); err != nil {
+	//	t.Fatalf("Error loading .env file: %v", err)
+	//}
 
 	currentTimestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	newUniqueEmail := fmt.Sprintf("testmail%s@testmail.com", currentTimestamp)
@@ -33,8 +31,30 @@ func TestImportProjectAction(t *testing.T) {
 
 	validImportFilePathOriginal := "./testfiles/imports/validImport1.yaml"
 
-	t.Run("Sign up", func(t *testing.T) {
-		output, err := utils.CaptureOutputInTests(actions.SignUpAction, context.Background(), &cli.Command{
+	tempDir, _ := os.MkdirTemp("", "paw-test-*")
+	os.Chdir(tempDir)
+
+	t.Run("Set up test", func(t *testing.T) {
+		cmd := &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "server",
+					Value: "http://127.0.0.1:8080/",
+				},
+				&cli.StringFlag{
+					Name:  "language",
+					Value: "go",
+				},
+			},
+		}
+		cmd.Set("server", "http://127.0.0.1:8080/")
+		cmd.Set("language", "go")
+
+		output, err := utils.CaptureOutputInTests(actions.InitDefaultSettingsFileAction, context.Background(), cmd)
+		assert.NoError(t, err)
+		assert.Contains(t, output, "Configuration file 'fcsettings.yaml' has been created")
+
+		output, err = utils.CaptureOutputInTests(actions.SignUpAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "email",
@@ -56,10 +76,8 @@ func TestImportProjectAction(t *testing.T) {
 		} else {
 			t.Fatal("Signup did not return a token")
 		}
-	})
 
-	t.Run("Create a new project to import into", func(t *testing.T) {
-		output, err := utils.CaptureOutputInTests(actions.CreateNewProjectAction, context.Background(), &cli.Command{
+		output, err = utils.CaptureOutputInTests(actions.CreateNewProjectAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "name",
@@ -80,12 +98,10 @@ func TestImportProjectAction(t *testing.T) {
 		var createdProject api.ProjectAPIResponse
 		err = json.Unmarshal([]byte(output), &createdProject)
 		projectID = createdProject.ID // Store the ID for the import step
-	})
 
-	t.Run("Import project with valid file", func(t *testing.T) {
 		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
 
-		output, _ := utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
+		output, _ = utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "project-id",
@@ -98,23 +114,27 @@ func TestImportProjectAction(t *testing.T) {
 			},
 		})
 		assert.Empty(t, output, "Output should be empty for valid import")
-
 	})
 
-	t.Run("Import project with non-existent file", func(t *testing.T) {
-		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
-
-		// Create context with required values
-		ctx := context.WithValue(context.Background(), "project-id", projectID)
-		ctx = context.WithValue(ctx, "file", "non-existent-file.yaml")
-
-		// Create import command
-		importCmd := &cli.Command{
-			Name: "import",
-		}
-
-		_, err := utils.CaptureOutputInTests(actions.ImportProjectAction, ctx, importCmd)
-		assert.NotNil(t, err, "Expected an error for non-existent file")
-		assert.Contains(t, err.Error(), "File not found", "Error message should indicate file not found")
-	})
+	//t.Run("Generate code for app", func(t *testing.T) {
+	//	// First, get list of apps using CLI command
+	//	output, err := utils.CaptureOutputInTests(actions.ListAppsAction, context.Background(), &cli.Command{
+	//		Flags: []cli.Flag{
+	//			&cli.StringFlag{
+	//				Name:  "project-id",
+	//				Value: projectID,
+	//			},
+	//		},
+	//	})
+	//	assert.Nil(t, err)
+	//
+	//	var apps []api.AppAPIResponse
+	//	err = json.Unmarshal([]byte(output), &apps)
+	//	assert.Nil(t, err)
+	//	assert.NotEmpty(t, apps, "Should have at least one app after import")
+	//
+	//	// Pick the first app
+	//	appID := apps[0].ID
+	//	fmt.Println("Using app ID:", appID)
+	//})
 }

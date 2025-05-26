@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,20 +20,20 @@ func (c *FCApiClient) ListProjects() ([]ProjectAPIResponse, error) {
 	url := fmt.Sprintf("%sv1/protected/projects", c.host)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.New("failed to create request: " + err.Error())
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, errors.New("failed to send request: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, errors.New("failed to read response body: " + err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -44,7 +45,7 @@ func (c *FCApiClient) ListProjects() ([]ProjectAPIResponse, error) {
 
 	var projects []ProjectAPIResponse
 	if err := json.Unmarshal(bodyBytes, &projects); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, errors.New("failed to parse response: " + err.Error())
 	}
 
 	return projects, nil
@@ -72,13 +73,13 @@ func (c *FCApiClient) CreateProject(
 
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return nil, errors.New("failed to marshal request: " + err.Error())
 	}
 
 	url := fmt.Sprintf("%sv1/protected/projects", c.host)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.New("failed to create request: " + err.Error())
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -86,13 +87,13 @@ func (c *FCApiClient) CreateProject(
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, errors.New("failed to send request: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, errors.New("failed to read response body: " + err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -104,7 +105,7 @@ func (c *FCApiClient) CreateProject(
 
 	var project ProjectAPIResponse
 	if err := json.Unmarshal(bodyBytes, &project); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, errors.New("failed to parse response: " + err.Error())
 	}
 
 	return &project, nil
@@ -115,7 +116,7 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) error {
 	// First, verify and read the file
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
+		return errors.New("failed to read file: " + err.Error())
 	}
 
 	// Create request body with file content as text
@@ -128,14 +129,14 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) error {
 	// Marshal the request body to JSON
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
-		return fmt.Errorf("failed to marshal request: %w", err)
+		return errors.New("failed to marshal request: " + err.Error())
 	}
 
 	// Create the request
 	url := fmt.Sprintf("%sv1/protected/projects/%s/imports", c.host, projectID)
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		return errors.New("failed to create request: " + err.Error())
 	}
 
 	// Set headers
@@ -145,14 +146,14 @@ func (c *FCApiClient) ImportProject(projectID string, filePath string) error {
 	// Send the request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
+		return errors.New("failed to send request: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	// Read response body
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read response body: %w", err)
+		return errors.New("failed to read response body: " + err.Error())
 	}
 
 	// Check response status
@@ -171,20 +172,20 @@ func (c *FCApiClient) GenerateCode(projectID string, appID string) (*ProjectAPIR
 	url := fmt.Sprintf("%sv1/protected/projects/%s/apps/%s/generate", c.host, projectID, appID)
 	req, err := http.NewRequest(http.MethodPost, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.New("failed to create request: " + err.Error())
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, errors.New("failed to send request: " + err.Error())
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		return nil, errors.New("failed to read response body: " + err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -196,7 +197,7 @@ func (c *FCApiClient) GenerateCode(projectID string, appID string) (*ProjectAPIR
 
 	var project ProjectAPIResponse
 	if err := json.Unmarshal(bodyBytes, &project); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, errors.New("failed to parse response: " + err.Error())
 	}
 
 	return &project, nil

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -35,7 +36,7 @@ func loadSettings() (*contracts.SettingYAMLFile, error) {
 
 	var settings contracts.SettingYAMLFile
 	if err := yaml.Unmarshal(data, &settings); err != nil {
-		return nil, fmt.Errorf("invalid settings file format: %w", err)
+		return nil, errors.New("invalid settings file format: " + err.Error())
 	}
 
 	return &settings, nil
@@ -51,7 +52,7 @@ func NewFCApiClient() (*FCApiClient, error) {
 	if _, err := os.Stat("fcsettings.yaml"); err == nil {
 		settings, err := loadSettings()
 		if err != nil {
-			return nil, fmt.Errorf("failed to load settings file: %w", err)
+			return nil, errors.New("failed to load settings file: " + err.Error())
 		}
 		if settings.Server != "" {
 			fileHost = settings.Server
@@ -62,7 +63,7 @@ func NewFCApiClient() (*FCApiClient, error) {
 	// Handle configuration conflicts and priorities
 	switch {
 	case envHost != "" && hasFileHost:
-		return nil, fmt.Errorf("host is specified in both environment variable and settings file - please use only one source")
+		return nil, errors.New("host is specified in both environment variable and settings file - please use only one source")
 	case envHost != "":
 		return &FCApiClient{
 			host:       envHost,
@@ -74,7 +75,7 @@ func NewFCApiClient() (*FCApiClient, error) {
 			httpClient: &http.Client{},
 		}, nil
 	default:
-		return nil, fmt.Errorf("host is not specified in either environment variable (FC_HOST) or settings file")
+		return nil, errors.New("host is not specified in either environment variable (FC_HOST) or settings file")
 	}
 }
 

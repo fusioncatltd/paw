@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -54,19 +55,20 @@ func SignUpAction(_ context.Context, cmd *cli.Command) error {
 	saveToken := cmd.Bool("save-token")
 
 	if email == "" || password == "" {
-		return fmt.Errorf("both email and password are required")
+		return cli.Exit("both email and password are required", 1)
 	}
 
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return fmt.Errorf("failed to initialize API client: %w", err)
+		return cli.Exit("failed to initialize API client: "+err.Error(), 1)
 	}
 
-	if err := client.SignUp(email, password); err != nil {
+	err = client.SignUp(email, password)
+	if err != nil {
 		if apiErr, ok := err.(*api.APIError); ok {
-			return cli.Exit(fmt.Sprintf("Signup failed: %s", apiErr), 1)
+			return errors.New(fmt.Sprintf("Signup failed: %s", apiErr))
 		}
-		return cli.Exit(fmt.Sprintf("Signup failed: %v", err), 1)
+		return errors.New(fmt.Sprintf("Signup failed: %v", err))
 	}
 
 	// Get the authorization token from the client
@@ -80,7 +82,6 @@ func SignUpAction(_ context.Context, cmd *cli.Command) error {
 		if err := os.Setenv("FC_ACCESS_TOKEN", token); err != nil {
 			return cli.Exit(fmt.Sprintf("Failed to save token to environment: %v", err), 1)
 		}
-		fmt.Fprintln(os.Stderr, "Token saved to FC_ACCESS_TOKEN environment variable")
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,14 +25,14 @@ func (c *FCApiClient) ListApps(projectID string) ([]AppAPIResponse, error) {
 	url := fmt.Sprintf("%sv1/protected/projects/%s/apps", c.host, projectID)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, errors.New("failed to create request: " + err.Error())
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %w", err)
+		return nil, errors.New("failed to send request: " + err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -47,7 +48,7 @@ func (c *FCApiClient) ListApps(projectID string) ([]AppAPIResponse, error) {
 	// Read and parse response body
 	var apps []AppAPIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apps); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+		return nil, errors.New("failed to decode response: " + err.Error())
 	}
 
 	return apps, nil
