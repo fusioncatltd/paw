@@ -31,11 +31,6 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 		return errors.New(fmt.Sprintf("failed to parse settings file: %s", err))
 	}
 
-	// Get project ID from settings
-	if settings.WorkingWithProject == nil {
-		return cli.Exit("No project ID specified in settings file. Please run 'paw init-settings-file --working-with-project <project-id>' first", 1)
-	}
-
 	// Get app ID from command flags
 	appID := cmd.String("app-id")
 	if appID == "" {

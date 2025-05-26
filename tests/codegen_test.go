@@ -19,11 +19,6 @@ import (
 )
 
 func TestAppCodegenActions(t *testing.T) {
-	// Load .env file
-	//if err := godotenv.Load(".env"); err != nil {
-	//	t.Fatalf("Error loading .env file: %v", err)
-	//}
-
 	currentTimestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	newUniqueEmail := fmt.Sprintf("testmail%s@testmail.com", currentTimestamp)
 	testPassword := "password123"
@@ -123,25 +118,42 @@ func TestAppCodegenActions(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	//t.Run("Generate code for app", func(t *testing.T) {
-	//	// First, get list of apps using CLI command
-	//	output, err := utils.CaptureOutputInTests(actions.ListAppsAction, context.Background(), &cli.Command{
-	//		Flags: []cli.Flag{
-	//			&cli.StringFlag{
-	//				Name:  "project-id",
-	//				Value: projectID,
-	//			},
-	//		},
-	//	})
-	//	assert.Nil(t, err)
-	//
-	//	var apps []api.AppAPIResponse
-	//	err = json.Unmarshal([]byte(output), &apps)
-	//	assert.Nil(t, err)
-	//	assert.NotEmpty(t, apps, "Should have at least one app after import")
-	//
-	//	// Pick the first app
-	//	appID := apps[0].ID
-	//	fmt.Println("Using app ID:", appID)
-	//})
+	t.Run("Generate code for app", func(t *testing.T) {
+		// First, get list of apps using CLI command
+		output, err := utils.CaptureOutputInTests(actions.ListAppsAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "project-id",
+					Value: projectID,
+				},
+			},
+		})
+		assert.Nil(t, err)
+
+		var apps []api.AppAPIResponse
+		err = json.Unmarshal([]byte(output), &apps)
+		assert.Nil(t, err)
+		assert.NotEmpty(t, apps, "Should have at least one app after import")
+
+		// Pick the first app
+		appID := apps[0].ID
+		fmt.Println("Using app ID:", appID)
+
+		// Generate code for the app
+		output, err = utils.CaptureOutputInTests(actions.GenerateAppCodeAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "app-id",
+					Value: appID,
+				},
+			},
+		})
+		assert.Nil(t, err)
+		assert.Contains(t, output, "Code generated successfully and saved to")
+
+		// Verify that the generated file exists
+		expectedFilePath := filepath.Join("fusioncat", fmt.Sprintf("%s.go", appID))
+		_, err = os.Stat(expectedFilePath)
+		assert.Nil(t, err, "Generated file should exist")
+	})
 }
