@@ -77,6 +77,26 @@ func GetCLIRouter() *cli.Command {
 				Action: actions.SignInAction,
 			},
 			{
+				Name:        "codegen",
+				Usage:       "Generate code from project definitions",
+				Description: "List, create, and manage projects",
+				Commands: []*cli.Command{
+					{
+						Name:        "app",
+						Usage:       "Create a new project",
+						Description: "Create a new project with the specified name and description",
+						Action:      actions.CreateNewProjectAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "workspace-id",
+								Usage:    "If project belongs to a workspace, specify the workspace ID",
+								Required: false,
+							},
+						},
+					},
+				},
+			},
+			{
 				Name:        "projects",
 				Usage:       "Manage projects",
 				Description: "List, create, and manage projects",
