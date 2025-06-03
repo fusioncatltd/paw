@@ -53,7 +53,7 @@ nfpms:
 brews:
   - name: paw
     repository:
-      owner: fusioncatalyst
+      owner: fusioncatltd
       name: homebrew-osx-apps
     description: "paw CLI is an official fusioncat tool for managing data contracts and AI prompts."
     test: |

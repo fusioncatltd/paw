@@ -26,3 +26,4 @@ tests/.env
 .idea
 .cursor/rules/openapi.mdc
 paw
+dist
