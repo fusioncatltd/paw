@@ -1,0 +1,62 @@
+version: 2
+
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+builds:
+  - id: paw
+    binary: paw
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - "-s -w"
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+
+nfpms:
+  - id: paw
+    package_name: paw
+    vendor: fusioncat.dev
+    homepage: https://fusioncat.dev
+    maintainer: fusioncat.dev
+    description: |-
+      paw CLI is a tool for managing data contracts
+      and AI prompts in asynchronous server-side software systems.
+      It relies on the fusioncat API to manage data contracts.
+    formats:
+      - apk
+      - deb
+      - rpm
+      - termux.deb
+      - archlinux
+
+brews:
+  - name: paw
+    repository:
+      owner: fusioncatalyst
+      name: homebrew-osx-apps
+    description: "paw CLI is an official fusioncat tool for managing data contracts and AI prompts."
+    test: |
+      system "#{bin}/paw --version"
+    install: |
+      bin.install "paw"
