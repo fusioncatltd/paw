@@ -1,9 +1,6 @@
 version: 2
 
 project_name: paw
-repo:
-  owner: fusiontald
-  name: paw
 
 before:
   hooks:
