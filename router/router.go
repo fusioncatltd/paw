@@ -83,13 +83,18 @@ func GetCLIRouter() *cli.Command {
 				Commands: []*cli.Command{
 					{
 						Name:        "app",
-						Usage:       "Create a new project",
-						Description: "Create a new project with the specified name and description",
-						Action:      actions.CreateNewProjectAction,
+						Usage:       "Generate code for a specific app",
+						Description: "Generate code for a specific application in the project",
+						Action:      actions.GenerateAppCodeAction,
 						Flags: []cli.Flag{
 							&cli.StringFlag{
-								Name:     "workspace-id",
-								Usage:    "If project belongs to a workspace, specify the workspace ID",
+								Name:     "app-id",
+								Usage:    "The ID of the application to generate code for",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:     "language",
+								Usage:    "The target language for code generation (typescript, python, java, go)",
 								Required: false,
 							},
 						},

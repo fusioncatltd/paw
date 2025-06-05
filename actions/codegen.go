@@ -33,6 +33,7 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 
 	// Get app ID from command flags
 	appID := cmd.String("app-id")
+	language := cmd.String("language")
 	if appID == "" {
 		return cli.Exit("App ID is required. Please provide it using --app-id flag", 1)
 	}
@@ -44,7 +45,7 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Generate code using API
-	code, err := client.GenerateAppCode(appID, settings.CodeGeneration.Language)
+	code, err := client.GenerateAppCode(appID, language)
 	if err != nil {
 		return errors.New(fmt.Sprintf("failed to generate code: %s", err))
 	}
@@ -55,7 +56,7 @@ func GenerateAppCodeAction(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	// Generate filename based on app ID and language
-	fileName := fmt.Sprintf("%s.%s", appID, getFileExtension(settings.CodeGeneration.Language))
+	fileName := fmt.Sprintf("%s.%s", appID, getFileExtension(language))
 
 	// Write the generated code to file
 	filePath := filepath.Join("fusioncat", fileName)
