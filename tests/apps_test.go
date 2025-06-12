@@ -80,17 +80,20 @@ func TestAppRelatedActions(t *testing.T) {
 
 		assert.NotEmpty(t, projectID, "Project ID should be set before import test")
 
-		// Create context with required values
-		ctx := context.WithValue(context.Background(), "project-id", projectID)
-		ctx = context.WithValue(ctx, "file", validImportFilePathOriginal)
-
-		// Create import command
-		importCmd := &cli.Command{
-			Name: "import",
-		}
-
-		output, _ = utils.CaptureOutputInTests(actions.ImportProjectAction, ctx, importCmd)
+		output, importErr := utils.CaptureOutputInTests(actions.ImportProjectAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "project-id",
+					Value: projectID,
+				},
+				&cli.StringFlag{
+					Name:  "file",
+					Value: validImportFilePathOriginal,
+				},
+			},
+		})
 		assert.Empty(t, output, "Output should be empty for valid import")
+		assert.Nil(t, importErr, "Import should not return an error")
 	})
 
 	t.Run("List apps in project", func(t *testing.T) {
@@ -115,7 +118,7 @@ func TestAppRelatedActions(t *testing.T) {
 
 		// Verify the response
 		assert.NotNil(t, apps, "Apps list should not be nil")
-		assert.Equal(t, len(apps), 6, "Should return zero or more apps")
+		assert.GreaterOrEqual(t, len(apps), 1, "Should return more than 1 app")
 
 		// If there are apps, verify their structure
 		if len(apps) > 0 {
@@ -126,5 +129,70 @@ func TestAppRelatedActions(t *testing.T) {
 				assert.NotEmpty(t, app.Status, "App status should not be empty")
 			}
 		}
+	})
+
+	t.Run("Create new app", func(t *testing.T) {
+		// Create command with required flags
+		cmd := &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "project-id",
+					Value: projectID,
+				},
+				&cli.StringFlag{
+					Name:  "name",
+					Value: "TestApp",
+				},
+				&cli.StringFlag{
+					Name:  "description",
+					Value: "Test app description",
+				},
+			},
+		}
+
+		// Execute create app action
+		output, err := utils.CaptureOutputInTests(actions.CreateNewAppAction, context.Background(), cmd)
+		assert.Nil(t, err)
+
+		// Parse the JSON output
+		var createdApp api.AppAPIResponse
+		err = json.Unmarshal([]byte(output), &createdApp)
+		assert.Nil(t, err)
+
+		// Verify the response
+		assert.NotEmpty(t, createdApp.ID, "App ID should not be empty")
+		assert.Equal(t, "TestApp", createdApp.Name, "App name should match the input")
+		assert.Equal(t, "Test app description", createdApp.Description, "App description should match the input")
+		assert.Equal(t, projectID, createdApp.ProjectID, "App should belong to the test project")
+		assert.NotEmpty(t, createdApp.Status, "App status should not be empty")
+
+		// Verify the app appears in the list
+		listCmd := &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "project-id",
+					Value: projectID,
+				},
+			},
+		}
+
+		output, err = utils.CaptureOutputInTests(actions.ListAppsAction, context.Background(), listCmd)
+		assert.Nil(t, err)
+
+		var apps []api.AppAPIResponse
+		err = json.Unmarshal([]byte(output), &apps)
+		assert.Nil(t, err)
+
+		// Find the newly created app in the list
+		found := false
+		for _, app := range apps {
+			if app.ID == createdApp.ID {
+				found = true
+				assert.Equal(t, "TestApp", app.Name, "App name should match in the list")
+				assert.Equal(t, "Test app description", app.Description, "App description should match in the list")
+				break
+			}
+		}
+		assert.True(t, found, "Newly created app should be found in the list")
 	})
 }

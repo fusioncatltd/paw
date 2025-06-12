@@ -7,199 +7,111 @@ servers:
     description: "Main Kafka message broker"
     resources:
       - name: emails
-        mode: readwrite
+        mode: readwrite # could be also write or read
         type: topic
-        description: emails
-      - name: notifications
-        mode: readwrite
-        type: topic
-        description: notifications
-      - name: user_events
-        mode: readwrite
-        type: topic
-        description: user_events
-      - name: payment_events
-        mode: readwrite
-        type: topic
-        description: payment_events
-      - name: analytics
-        mode: readwrite
-        type: topic
-        description: analytics
-
-  - name: mainrmq
-    type: async+amqp
-    description: "Main RabbitMQ server"
-    resources:
-      - name: mainexchange
-        mode: write
-        type: exchange
-        description: mainexchange
-      - name: mainqueue
-        mode: read
-        type: queue
-        description: mainqueue
-      - name: paymentexchange
-        mode: write
-        type: exchange
-        description: paymentexchange
-      - name: paymentqueue
-        mode: read
-        type: queue
-        description: paymentqueue
-      - name: notificationexchange
-        mode: write
-        type: exchange
-        description: notificationexchange
-      - name: notificationqueue
-        mode: read
-        type: queue
-        description: notificationqueue
-    binds:
-      - source: mainexchange
-        target: mainqueue
-      - source: paymentexchange
-        target: paymentqueue
-      - source: notificationexchange
-        target: notificationqueue
-
-  - name: backupkafka
-    type: async+kafka
-    description: "Backup Kafka cluster"
-    resources:
-      - name: backup_emails
-        mode: readwrite
-        type: topic
-        description: backup_emails
-      - name: backup_analytics
-        mode: readwrite
-        type: topic
-        description: backup_analytics
-
-  - name: webhookserver
-    type: async+webhook
-    description: "Webhook server for external integrations"
-    resources:
-      - name: stripe_webhook
-        mode: read
-        type: endpoint
-        description: stripe_webhook
-      - name: slack_webhook
-        mode: read
-        type: endpoint
-        description: slack_webhook
+        resource_name: emails
 
 schemas:
-  - name: "email_schema"
+  - name: "email_account_verification"
     type: "jsonschema"
     version: 1
-    description: "Schema for email messages"
-    schema: "{\"type\":\"object\",\"properties\":{\"to\":{\"type\":\"string\"},\"subject\":{\"type\":\"string\"},\"body\":{\"type\":\"string\"}},\"required\":[\"to\",\"subject\",\"body\"]}"
-
-  - name: "notification_schema"
+    description: "Account verification emails sent upog signup"
+    schema: |
+      {
+          "$schema": "https://json-schema.org/draft/2019-09/schema",
+          "$id": "http://example.com/example.json",
+          "type": "object",
+          "default": {},
+          "title": "Account verification email",
+          "required": [
+              "recipient",
+              "verification_code"
+          ],
+          "properties": {
+              "recipient": {
+                  "type": "string",
+                  "default": "",
+                  "title": "The recipient Schema",
+                  "examples": [
+                      "email@recipient.com"
+                  ]
+              },
+              "verification_code": {
+                  "type": "string",
+                  "default": "",
+                  "title": "The verification_code Schema",
+                  "examples": [
+                      "STRING"
+                  ]
+              }
+          },
+          "examples": [{
+              "recipient": "email@recipient.com",
+              "verification_code": "STRING"
+          }]
+      }
+  - name: "email_password_recovery"
     type: "jsonschema"
     version: 1
-    description: "Schema for notification messages"
-    example: "{\"user_id\":\"123\",\"message\":\"Hello world\",\"timestamp\":\"2023-01-01T12:00:00Z\"}"
-
-  - name: "payment_schema"
-    type: "jsonschema"
-    version: 1
-    description: "Schema for payment events"
-    schema: "{\"type\":\"object\",\"properties\":{\"transaction_id\":{\"type\":\"string\"},\"amount\":{\"type\":\"number\"},\"currency\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"}},\"required\":[\"transaction_id\",\"amount\",\"currency\",\"status\"]}"
-
-  - name: "user_event_schema"
-    type: "jsonschema"
-    version: 1
-    description: "Schema for user events"
-    schema: "{\"type\":\"object\",\"properties\":{\"user_id\":{\"type\":\"string\"},\"event_type\":{\"type\":\"string\"},\"timestamp\":{\"type\":\"string\"},\"metadata\":{\"type\":\"object\"}},\"required\":[\"user_id\",\"event_type\",\"timestamp\"]}"
-
-  - name: "analytics_schema"
-    type: "jsonschema"
-    version: 1
-    description: "Schema for analytics data"
-    schema: "{\"type\":\"object\",\"properties\":{\"metric_name\":{\"type\":\"string\"},\"value\":{\"type\":\"number\"},\"dimensions\":{\"type\":\"object\"},\"timestamp\":{\"type\":\"string\"}},\"required\":[\"metric_name\",\"value\",\"timestamp\"]}"
+    description: "Password recovery emails"
+    schema: |
+      {
+        "$schema": "https://json-schema.org/draft/2019-09/schema",
+        "$id": "http://example.com/example.json",
+        "type": "object",
+        "default": {},
+        "title": "Password recovery email",
+        "required": [
+          "recipient",
+          "recovery_code"
+        ],
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "default": "",
+            "title": "The recipient Schema",
+            "examples": [
+              "email@recipient.com"
+            ]
+          },
+          "recovery_code": {
+            "type": "string",
+            "default": "",
+            "title": "The recovery_code Schema",
+            "examples": [
+              "STRING"
+            ]
+          }
+        },
+        "examples": [{
+          "recipient": "email@recipient.com",
+          "recovery_code": "STRING"
+        }]
+      }
 
 messages:
-  - name: "send_email"
-    description: "Message for sending emails"
+  - name: "account_verification_message"
+    description: "Message which requests sending account verification email"
     schema:
-      name: "email_schema"
-
-  - name: "send_notification"
-    description: "Message for sending notifications"
+      name: "email_account_verification"
+  - name: "password_recovery_message"
+    description: "Message which requests sending password recovery email"
     schema:
-      name: "notification_schema"
-
-  - name: "process_payment"
-    description: "Message for processing payments"
-    schema:
-      name: "payment_schema"
-
-  - name: "track_user_event"
-    description: "Message for tracking user events"
-    schema:
-      name: "user_event_schema"
-
-  - name: "record_analytics"
-    description: "Message for recording analytics"
-    schema:
-      name: "analytics_schema"
+      name: "email_password_recovery"
 
 apps:
-  - name: "main_backend"
-    description: "Main backend application"
+  - name: "backend_server"
+    description: "Main backend application which contains core business logic and main API server"
     sends:
-      - message: "send_email"
+      - message: "account_verification_message"
         resource: "async+kafka://mainkafka@readwrite/topic/emails"
-      - message: "track_user_event"
-        resource: "async+kafka://mainkafka@readwrite/topic/user_events"
-      - message: "process_payment"
-        resource: "async+amqp://mainrmq@write/exchange/paymentexchange"
-
-  - name: "mailer"
-    description: "Email sending service"
-    receives:
-      - message: "send_email"
+      - message: "password_recovery_message"
         resource: "async+kafka://mainkafka@readwrite/topic/emails"
-    sends:
-      - message: "record_analytics"
-        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
 
-  - name: "notification_service"
-    description: "Notification service"
+  - name: "marketing_and_communications"
+    description: "This service is responsible for all marketing activities and communications"
     receives:
-      - message: "send_notification"
-        resource: "async+amqp://mainrmq@read/queue/notificationqueue"
-    sends:
-      - message: "send_notification"
-        resource: "async+amqp://mainrmq@write/exchange/notificationexchange"
-
-  - name: "payment_processor"
-    description: "Payment processing service"
-    receives:
-      - message: "process_payment"
-        resource: "async+amqp://mainrmq@read/queue/paymentqueue"
-    sends:
-      - message: "track_user_event"
-        resource: "async+kafka://mainkafka@readwrite/topic/user_events"
-      - message: "record_analytics"
-        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
-
-  - name: "analytics_service"
-    description: "Analytics processing service"
-    receives:
-      - message: "record_analytics"
-        resource: "async+kafka://mainkafka@readwrite/topic/analytics"
-    sends:
-      - message: "record_analytics"
-        resource: "async+kafka://backupkafka@readwrite/topic/backup_analytics"
-
-  - name: "webhook_handler"
-    description: "Webhook handling service"
-    receives:
-      - message: "process_payment"
-        resource: "async+webhook://webhookserver@read/endpoint/stripe_webhook"
-    sends:
-      - message: "send_notification"
-        resource: "async+amqp://mainrmq@write/exchange/notificationexchange"
+      - message: "account_verification_message"
+        resource: "async+kafka://mainkafka@readwrite/topic/emails"
+      - message: "password_recovery_message"
+        resource: "async+kafka://mainkafka@readwrite/topic/emails"
