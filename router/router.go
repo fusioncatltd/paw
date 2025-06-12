@@ -158,6 +158,26 @@ func GetCLIRouter() *cli.Command {
 				},
 			},
 			{
+				Name:        "schemas",
+				Usage:       "Manage schemas",
+				Description: "List, create, and manage schemas in projects",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all schemas in a project",
+						Description: "Get information about all schemas in a project you have access to",
+						Action:      actions.ListSchemasAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to operate on",
+								Required: true,
+							},
+						},
+					},
+				},
+			},
+			{
 				Name:        "projects",
 				Usage:       "Manage projects",
 				Description: "List, create, and manage projects",
