@@ -33,48 +33,61 @@ func GetCLIRouter() *cli.Command {
 				Action: actions.InitDefaultSettingsFileAction,
 			},
 			{
-				Name:        "signup",
-				Usage:       "Create a new user account",
-				Description: "Sign up for a new account using email and password",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "email",
-						Usage:    "User's email address",
-						Required: true,
+				Name:        "auth",
+				Usage:       "Authentication commands",
+				Description: "Sign up, sign in, and manage authentication",
+				Commands: []*cli.Command{
+					{
+						Name:        "signin",
+						Usage:       "Sign in to existing account",
+						Description: "Sign in using email and password",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "email",
+								Usage:    "User's email address",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "password",
+								Usage:    "User's password",
+								Required: true,
+							},
+							&cli.BoolFlag{
+								Name:  "save-token",
+								Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
+							},
+						},
+						Action: actions.SignInAction,
 					},
-					&cli.StringFlag{
-						Name:     "password",
-						Usage:    "User's password",
-						Required: true,
+					{
+						Name:        "signup",
+						Usage:       "Create a new user account",
+						Description: "Sign up for a new account using email and password",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "email",
+								Usage:    "User's email address",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "password",
+								Usage:    "User's password",
+								Required: true,
+							},
+							&cli.BoolFlag{
+								Name:  "save-token",
+								Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
+							},
+						},
+						Action: actions.SignUpAction,
 					},
-					&cli.BoolFlag{
-						Name:  "save-token",
-						Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
+					{
+						Name:        "me",
+						Usage:       "paw me",
+						Description: "Returns the information about authentication token owner",
+						Action:      actions.MeAction,
 					},
 				},
-				Action: actions.SignUpAction,
-			},
-			{
-				Name:        "signin",
-				Usage:       "Sign in to existing account",
-				Description: "Sign in using email and password",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "email",
-						Usage:    "User's email address",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "password",
-						Usage:    "User's password",
-						Required: true,
-					},
-					&cli.BoolFlag{
-						Name:  "save-token",
-						Usage: "Save the authorization token to FC_ACCESS_TOKEN environment variable",
-					},
-				},
-				Action: actions.SignInAction,
 			},
 			{
 				Name:        "codegen",
@@ -116,6 +129,29 @@ func GetCLIRouter() *cli.Command {
 								Name:     "project-id",
 								Usage:    "The ID of the project to operate on",
 								Required: true,
+							},
+						},
+					},
+					{
+						Name:        "new",
+						Usage:       "Create a new app",
+						Description: "Create a new app in the specified project",
+						Action:      actions.CreateNewAppAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to create the app in",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the app",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "description",
+								Usage:    "Description of the app",
+								Required: false,
 							},
 						},
 					},
@@ -200,12 +236,6 @@ func GetCLIRouter() *cli.Command {
 						Action: actions.GenerateCodeAction,
 					},
 				},
-			},
-			{
-				Name:        "me",
-				Usage:       "paw me",
-				Description: "Returns the information about authentication token owner",
-				Action:      actions.MeAction,
 			},
 		},
 	}
