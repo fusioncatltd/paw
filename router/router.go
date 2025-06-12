@@ -175,6 +175,39 @@ func GetCLIRouter() *cli.Command {
 							},
 						},
 					},
+					{
+						Name:        "new",
+						Usage:       "Create a new schema",
+						Description: "Create a new schema in the specified project",
+						Action:      actions.CreateSchemaAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to create the schema in",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the schema",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "description",
+								Usage:    "Description of the schema",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:     "type",
+								Usage:    "Type of the schema (e.g., jsonschema)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "schema",
+								Usage:    "The schema content/definition",
+								Required: true,
+							},
+						},
+					},
 				},
 			},
 			{
