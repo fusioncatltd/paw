@@ -202,14 +202,9 @@ func GetCLIRouter() *cli.Command {
 								Required: true,
 							},
 							&cli.StringFlag{
-								Name:     "schema",
-								Usage:    "The schema content/definition (use this or --schema-file, not both)",
-								Required: false,
-							},
-							&cli.StringFlag{
 								Name:     "schema-file",
-								Usage:    "Path to a file containing the schema (use this or --schema, not both)",
-								Required: false,
+								Usage:    "Path to a file containing the schema",
+								Required: true,
 							},
 						},
 					},

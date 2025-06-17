@@ -56,6 +56,18 @@ func (c *FCApiClient) ListSchemas(projectID string) ([]SchemaAPIResponse, error)
 
 // CreateSchema creates a new schema in the specified project
 func (c *FCApiClient) CreateSchema(projectID string, name string, description string, schemaType string, schemaContent string) (*SchemaAPIResponse, error) {
+	// First, validate that the schema content is valid JSON
+	var schemaJSON interface{}
+	if err := json.Unmarshal([]byte(schemaContent), &schemaJSON); err != nil {
+		return nil, errors.New("invalid schema content: " + err.Error())
+	}
+
+	// Re-marshal the schema to ensure it's properly escaped
+	escapedSchema, err := json.Marshal(schemaJSON)
+	if err != nil {
+		return nil, errors.New("failed to escape schema content: " + err.Error())
+	}
+
 	// Prepare request body
 	reqBody := struct {
 		Name        string `json:"name"`
@@ -66,7 +78,7 @@ func (c *FCApiClient) CreateSchema(projectID string, name string, description st
 		Name:        name,
 		Description: description,
 		Type:        schemaType,
-		Schema:      schemaContent,
+		Schema:      string(escapedSchema),
 	}
 
 	jsonData, err := json.Marshal(reqBody)

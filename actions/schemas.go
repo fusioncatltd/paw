@@ -46,7 +46,6 @@ func CreateSchemaAction(ctx context.Context, cmd *cli.Command) error {
 	name := cmd.String("name")
 	description := cmd.String("description")
 	schemaType := cmd.String("type")
-	schemaContent := cmd.String("schema")
 	schemaFile := cmd.String("schema-file")
 
 	if projectID == "" {
@@ -58,26 +57,16 @@ func CreateSchemaAction(ctx context.Context, cmd *cli.Command) error {
 	if schemaType == "" {
 		return cli.Exit("Schema type is required. Please provide it using --type flag", 1)
 	}
-
-	// Validate schema input
-	if schemaContent == "" && schemaFile == "" {
-		return cli.Exit("Either --schema or --schema-file must be provided", 1)
-	}
-	if schemaContent != "" && schemaFile != "" {
-		return cli.Exit("Cannot provide both --schema and --schema-file. Please use only one of them", 1)
+	if schemaFile == "" {
+		return cli.Exit("Schema file is required. Please provide it using --schema-file flag", 1)
 	}
 
-	// Get schema content either from file or direct input
-	var finalSchemaContent string
-	if schemaFile != "" {
-		content, err := os.ReadFile(schemaFile)
-		if err != nil {
-			return cli.Exit(fmt.Sprintf("Failed to read schema file: %s", err), 1)
-		}
-		finalSchemaContent = string(content)
-	} else {
-		finalSchemaContent = schemaContent
+	// Read schema content from file
+	content, err := os.ReadFile(schemaFile)
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to read schema file: %s", err), 1)
 	}
+	finalSchemaContent := string(content)
 
 	// Initialize API client
 	client, err := api.NewFCApiClient()
