@@ -130,3 +130,33 @@ func UpdateSchemaAction(ctx context.Context, cmd *cli.Command) error {
 
 	return nil
 }
+
+func ListSchemaVersionsAction(ctx context.Context, cmd *cli.Command) error {
+	// Get required parameters from command flags
+	schemaID := cmd.String("schema-id")
+
+	if schemaID == "" {
+		return errors.New("Schema ID is required. Please provide it using --schema-id flag")
+	}
+
+	// Initialize API client
+	client, err := api.NewFCApiClient()
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
+	}
+
+	// Get list of schema versions
+	versions, err := client.ListSchemaVersions(schemaID)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to list schema versions: %s", err))
+	}
+
+	// Print formatted JSON
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(versions); err != nil {
+		return errors.New(fmt.Sprintf("failed to encode response: %s", err))
+	}
+
+	return nil
+}

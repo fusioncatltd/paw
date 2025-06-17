@@ -369,4 +369,44 @@ func TestSchemaActions(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("List schema versions", func(t *testing.T) {
+		// List schema versions using the existing schemaID
+		versionsOutput, err := utils.CaptureOutputInTests(actions.ListSchemaVersionsAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "schema-id",
+					Value: schemaID,
+				},
+			},
+		})
+		assert.NoError(t, err)
+
+		// Parse and verify versions response
+		var versionsResponse []api.SchemaVersionAPIResponse
+		err = json.Unmarshal([]byte(versionsOutput), &versionsResponse)
+		assert.Equal(t, len(versionsResponse), 2)
+
+		// Verify version details
+		version := versionsResponse[0]
+		assert.Equal(t, schemaID, version.SchemaID)
+		assert.NotEmpty(t, version.Version)
+		assert.NotEmpty(t, version.CreatedAt)
+		assert.NotEmpty(t, version.CreatedByName)
+		assert.NotEmpty(t, version.UserID)
+		assert.NotEmpty(t, version.Schema)
+	})
+
+	t.Run("List versions with invalid schema ID", func(t *testing.T) {
+		output, invalidSchemaErr := utils.CaptureOutputInTests(actions.ListSchemaVersionsAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "schema-id",
+					Value: "invalid-id",
+				},
+			},
+		})
+		assert.Error(t, invalidSchemaErr)
+		assert.Contains(t, output, "failed to list schema versions")
+	})
 }

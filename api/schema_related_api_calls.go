@@ -19,6 +19,17 @@ type SchemaAPIResponse struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
+// SchemaVersionAPIResponse represents a version of a schema
+type SchemaVersionAPIResponse struct {
+	CreatedAt     string `json:"created_at"`
+	CreatedByName string `json:"created_by_name"`
+	ID            string `json:"id"`
+	Schema        string `json:"schema"`
+	SchemaID      string `json:"schema_id"`
+	UserID        string `json:"user_id"`
+	Version       int    `json:"version"`
+}
+
 // ListSchemas retrieves a list of schemas for a specific project
 func (c *FCApiClient) ListSchemas(projectID string) ([]SchemaAPIResponse, error) {
 	// Make API request
@@ -178,4 +189,39 @@ func (c *FCApiClient) UpdateSchema(schemaID string, schemaContent string) (*Sche
 	}
 
 	return &schema, nil
+}
+
+// ListSchemaVersions retrieves all versions of a schema
+func (c *FCApiClient) ListSchemaVersions(schemaID string) ([]SchemaVersionAPIResponse, error) {
+	// Make API request
+	url := fmt.Sprintf("%sv1/protected/schemas/%s/versions", c.host, schemaID)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.New("failed to create request: " + err.Error())
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.New("failed to send request: " + err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(bodyBytes),
+		}
+	}
+
+	// Read and parse response body
+	var versions []SchemaVersionAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&versions); err != nil {
+		return nil, errors.New("failed to decode response: " + err.Error())
+	}
+
+	return versions, nil
 }

@@ -226,6 +226,19 @@ func GetCLIRouter() *cli.Command {
 							},
 						},
 					},
+					{
+						Name:        "versions",
+						Usage:       "List all versions of a schema",
+						Description: "Get information about all versions of a schema, including who made the changes and when",
+						Action:      actions.ListSchemaVersionsAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "schema-id",
+								Usage:    "The ID of the schema to list versions for",
+								Required: true,
+							},
+						},
+					},
 				},
 			},
 			{
