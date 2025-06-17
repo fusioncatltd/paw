@@ -119,3 +119,63 @@ func (c *FCApiClient) CreateSchema(projectID string, name string, description st
 
 	return &schema, nil
 }
+
+// UpdateSchema updates an existing schema
+func (c *FCApiClient) UpdateSchema(schemaID string, schemaContent string) (*SchemaAPIResponse, error) {
+	// First, validate that the schema content is valid JSON
+	var schemaJSON interface{}
+	if err := json.Unmarshal([]byte(schemaContent), &schemaJSON); err != nil {
+		return nil, errors.New("invalid schema content: " + err.Error())
+	}
+
+	// Re-marshal the schema to ensure it's properly escaped
+	escapedSchema, err := json.Marshal(schemaJSON)
+	if err != nil {
+		return nil, errors.New("failed to escape schema content: " + err.Error())
+	}
+
+	// Prepare request body
+	reqBody := struct {
+		Schema string `json:"schema"`
+	}{
+		Schema: string(escapedSchema),
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, errors.New("failed to marshal request: " + err.Error())
+	}
+
+	// Make API request
+	url := fmt.Sprintf("%sv1/protected/schemas/%s", c.host, schemaID)
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, errors.New("failed to create request: " + err.Error())
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.New("failed to send request: " + err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(bodyBytes),
+		}
+	}
+
+	// Read and parse response body
+	var schema SchemaAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&schema); err != nil {
+		return nil, errors.New("failed to decode response: " + err.Error())
+	}
+
+	return &schema, nil
+}

@@ -89,3 +89,44 @@ func CreateSchemaAction(ctx context.Context, cmd *cli.Command) error {
 
 	return nil
 }
+
+func UpdateSchemaAction(ctx context.Context, cmd *cli.Command) error {
+	// Get required parameters from command flags
+	schemaID := cmd.String("schema-id")
+	schemaFile := cmd.String("schema-file")
+
+	if schemaID == "" {
+		return cli.Exit("Schema ID is required. Please provide it using --schema-id flag", 1)
+	}
+	if schemaFile == "" {
+		return cli.Exit("Schema file is required. Please provide it using --schema-file flag", 1)
+	}
+
+	// Read schema content from file
+	content, err := os.ReadFile(schemaFile)
+	if err != nil {
+		return cli.Exit(fmt.Sprintf("Failed to read schema file: %s", err), 1)
+	}
+	finalSchemaContent := string(content)
+
+	// Initialize API client
+	client, err := api.NewFCApiClient()
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
+	}
+
+	// Update schema
+	schema, err := client.UpdateSchema(schemaID, finalSchemaContent)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to update schema: %s", err))
+	}
+
+	// Print formatted JSON response
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(schema); err != nil {
+		return errors.New(fmt.Sprintf("failed to encode response: %s", err))
+	}
+
+	return nil
+}

@@ -208,6 +208,24 @@ func GetCLIRouter() *cli.Command {
 							},
 						},
 					},
+					{
+						Name:        "update",
+						Usage:       "Update an existing schema",
+						Description: "Update an existing schema. Note: Only schema content can be updated. Schema name, type, and description cannot be changed.",
+						Action:      actions.UpdateSchemaAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "schema-id",
+								Usage:    "The ID of the schema to update",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "schema-file",
+								Usage:    "Path to a file containing the updated schema content",
+								Required: true,
+							},
+						},
+					},
 				},
 			},
 			{
