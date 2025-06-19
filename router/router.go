@@ -260,6 +260,59 @@ func GetCLIRouter() *cli.Command {
 				},
 			},
 			{
+				Name:        "messages",
+				Usage:       "Manage messages",
+				Description: "List, create, and manage messages in projects",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all messages in a project",
+						Description: "Get information about all messages in a project you have access to",
+						Action:      actions.ListMessagesAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to operate on",
+								Required: true,
+							},
+						},
+					},
+					{
+						Name:        "new",
+						Usage:       "Create a new message",
+						Description: "Create a new message in the specified project",
+						Action:      actions.CreateMessageAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to create the message in",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the message",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "description",
+								Usage:    "Description of the message",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:     "schema-id",
+								Usage:    "The ID of the schema this message is based on",
+								Required: true,
+							},
+							&cli.IntFlag{
+								Name:     "schema-version",
+								Usage:    "The version of the schema to use",
+								Required: true,
+							},
+						},
+					},
+				},
+			},
+			{
 				Name:        "projects",
 				Usage:       "Manage projects",
 				Description: "List, create, and manage projects",
