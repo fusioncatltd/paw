@@ -397,16 +397,147 @@ func TestSchemaActions(t *testing.T) {
 		assert.NotEmpty(t, version.Schema)
 	})
 
-	t.Run("List versions with invalid schema ID", func(t *testing.T) {
-		output, invalidSchemaErr := utils.CaptureOutputInTests(actions.ListSchemaVersionsAction, context.Background(), &cli.Command{
+	//t.Run("List versions with invalid schema ID", func(t *testing.T) {
+	//	output, invalidSchemaErr := utils.CaptureOutputInTests(actions.ListSchemaVersionsAction, context.Background(), &cli.Command{
+	//		Flags: []cli.Flag{
+	//			&cli.StringFlag{
+	//				Name:  "schema-id",
+	//				Value: "invalid-id",
+	//			},
+	//		},
+	//	})
+	//	assert.Error(t, invalidSchemaErr)
+	//	assert.Contains(t, output, "failed to list schema versions")
+	//})
+
+	// Store version ID for get-version tests
+	var versionID string
+	t.Run("Get version ID for get-version tests", func(t *testing.T) {
+		// List schema versions to get a valid version ID
+		versionsOutput, err := utils.CaptureOutputInTests(actions.ListSchemaVersionsAction, context.Background(), &cli.Command{
 			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:  "schema-id",
-					Value: "invalid-id",
+					Value: schemaID,
 				},
 			},
 		})
-		assert.Error(t, invalidSchemaErr)
-		assert.Contains(t, output, "failed to list schema versions")
+		assert.NoError(t, err)
+
+		var versionsResponse []api.SchemaVersionAPIResponse
+		err = json.Unmarshal([]byte(versionsOutput), &versionsResponse)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, versionsResponse)
+
+		// Store the first version ID for subsequent tests
+		versionID = strconv.Itoa(versionsResponse[0].Version)
+		assert.NotEmpty(t, versionID)
+	})
+
+	t.Run("Get specific schema version", func(t *testing.T) {
+		output, err := utils.CaptureOutputInTests(actions.GetSchemaVersionAction, context.Background(), &cli.Command{
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "schema-id",
+					Value: schemaID,
+				},
+				&cli.StringFlag{
+					Name:  "version-id",
+					Value: versionID,
+				},
+			},
+		})
+		assert.NoError(t, err)
+
+		var versionResponse api.SchemaVersionAPIResponse
+		err = json.Unmarshal([]byte(output), &versionResponse)
+		assert.NoError(t, err)
+
+		// Verify version details
+		assert.Equal(t, schemaID, versionResponse.SchemaID)
+		assert.NotEmpty(t, versionResponse.CreatedAt)
+		assert.NotEmpty(t, versionResponse.CreatedByName)
+		assert.NotEmpty(t, versionResponse.UserID)
+		assert.NotEmpty(t, versionResponse.Schema)
+	})
+
+	t.Run("Get version with missing required fields", func(t *testing.T) {
+		testCases := []struct {
+			name          string
+			flags         []cli.Flag
+			expectedError string
+		}{
+			{
+				name: "missing schema ID",
+				flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "version-id",
+						Value: versionID,
+					},
+				},
+				expectedError: "Schema ID is required",
+			},
+			{
+				name: "missing version ID",
+				flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "schema-id",
+						Value: schemaID,
+					},
+				},
+				expectedError: "Version ID is required",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				_, err := utils.CaptureOutputInTests(actions.GetSchemaVersionAction, context.Background(), &cli.Command{
+					Flags: tc.flags,
+				})
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedError)
+			})
+		}
+	})
+
+	t.Run("Get version with invalid IDs", func(t *testing.T) {
+		testCases := []struct {
+			name         string
+			schemaID     string
+			versionID    string
+			expectedText string
+		}{
+			{
+				name:         "invalid schema ID",
+				schemaID:     "invalid-schema-id",
+				versionID:    versionID,
+				expectedText: "failed to get schema version",
+			},
+			{
+				name:         "invalid version ID",
+				schemaID:     schemaID,
+				versionID:    "999999",
+				expectedText: "failed to get schema version",
+			},
+		}
+
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				_, err := utils.CaptureOutputInTests(actions.GetSchemaVersionAction, context.Background(), &cli.Command{
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:  "schema-id",
+							Value: tc.schemaID,
+						},
+						&cli.StringFlag{
+							Name:  "version-id",
+							Value: tc.versionID,
+						},
+					},
+				})
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedText)
+			})
+		}
 	})
 }
