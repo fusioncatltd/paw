@@ -225,3 +225,38 @@ func (c *FCApiClient) ListSchemaVersions(schemaID string) ([]SchemaVersionAPIRes
 
 	return versions, nil
 }
+
+// GetSchemaVersion retrieves a specific version of a schema
+func (c *FCApiClient) GetSchemaVersion(schemaID string, versionID string) (*SchemaVersionAPIResponse, error) {
+	// Make API request
+	url := fmt.Sprintf("%sv1/protected/schemas/%s/versions/%s", c.host, schemaID, versionID)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.New("failed to create request: " + err.Error())
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.New("failed to send request: " + err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{
+			StatusCode: resp.StatusCode,
+			Body:       string(bodyBytes),
+		}
+	}
+
+	// Read and parse response body
+	var version SchemaVersionAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&version); err != nil {
+		return nil, errors.New("failed to decode response: " + err.Error())
+	}
+
+	return &version, nil
+}

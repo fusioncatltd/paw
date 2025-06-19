@@ -160,3 +160,37 @@ func ListSchemaVersionsAction(ctx context.Context, cmd *cli.Command) error {
 
 	return nil
 }
+
+func GetSchemaVersionAction(ctx context.Context, cmd *cli.Command) error {
+	// Get required parameters from command flags
+	schemaID := cmd.String("schema-id")
+	versionID := cmd.String("version-id")
+
+	if schemaID == "" {
+		return cli.Exit("Schema ID is required. Please provide it using --schema-id flag", 1)
+	}
+	if versionID == "" {
+		return cli.Exit("Version ID is required. Please provide it using --version-id flag", 1)
+	}
+
+	// Initialize API client
+	client, err := api.NewFCApiClient()
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to initialize API client: %s", err))
+	}
+
+	// Get specific schema version
+	version, err := client.GetSchemaVersion(schemaID, versionID)
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to get schema version: %s", err))
+	}
+
+	// Print formatted JSON response
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(version); err != nil {
+		return errors.New(fmt.Sprintf("failed to encode response: %s", err))
+	}
+
+	return nil
+}

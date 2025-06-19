@@ -239,6 +239,24 @@ func GetCLIRouter() *cli.Command {
 							},
 						},
 					},
+					{
+						Name:        "get-version",
+						Usage:       "Get a specific version of a schema",
+						Description: "Retrieve a specific version of a schema by its schema ID and version ID",
+						Action:      actions.GetSchemaVersionAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "schema-id",
+								Usage:    "The ID of the schema",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "version-id",
+								Usage:    "The version ID of the schema",
+								Required: true,
+							},
+						},
+					},
 				},
 			},
 			{
