@@ -53,13 +53,13 @@ func (c *FCApiClient) ListMessages(projectID string) ([]MessageAPIResponse, erro
 }
 
 // CreateMessage creates a new message in the specified project
-func (c *FCApiClient) CreateMessage(projectID string, name string, description string, schemaID string, schemaVersion int) (*MessageAPIResponse, error) {
+func (c *FCApiClient) CreateMessage(projectID string, name string, description string, schemaID string, schemaVersion int64) (*MessageAPIResponse, error) {
 	// Prepare request body
 	reqBody := struct {
 		Name          string `json:"name"`
 		Description   string `json:"description,omitempty"`
 		SchemaID      string `json:"schema_id"`
-		SchemaVersion int    `json:"schema_version"`
+		SchemaVersion int64  `json:"schema_version"`
 	}{
 		Name:          name,
 		Description:   description,
