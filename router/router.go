@@ -422,6 +422,124 @@ func GetCLIRouter() *cli.Command {
 					},
 				},
 			},
+			{
+				Name:        "servers",
+				Usage:       "Manage servers",
+				Description: "List, create, update, and delete servers in projects",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all servers",
+						Description: "Get information about all servers, optionally filtered by project",
+						Action:      actions.ListServers,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:  "project-id",
+								Usage: "Filter servers by project ID",
+							},
+						},
+					},
+					{
+						Name:        "get",
+						Usage:       "Get server details",
+						Description: "Get detailed information about a specific server",
+						Action:      actions.GetServer,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "server-id",
+								Usage:    "The ID of the server",
+								Required: true,
+							},
+						},
+					},
+					{
+						Name:        "new",
+						Usage:       "Create a new server",
+						Description: "Create a new server in the specified project",
+						Action:      actions.CreateServer,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "project-id",
+								Usage:    "The ID of the project to create the server in",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the server",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "type",
+								Usage:    "Type of the server (e.g., async+kafka, async+amqp, async+webhook)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "description",
+								Usage:    "Description of the server",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:  "resources",
+								Usage: "Server resources as JSON array (e.g., '[{\"name\":\"emails\",\"mode\":\"readwrite\",\"type\":\"topic\"}]')",
+							},
+							&cli.StringFlag{
+								Name:  "binds",
+								Usage: "Server binds as JSON array for AMQP (e.g., '[{\"source\":\"exchange1\",\"destination\":\"queue1\"}]')",
+							},
+						},
+					},
+					{
+						Name:        "update",
+						Usage:       "Update an existing server",
+						Description: "Update an existing server's properties",
+						Action:      actions.UpdateServer,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "server-id",
+								Usage:    "The ID of the server to update",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:  "name",
+								Usage: "New name for the server",
+							},
+							&cli.StringFlag{
+								Name:  "type",
+								Usage: "New type for the server",
+							},
+							&cli.StringFlag{
+								Name:  "description",
+								Usage: "New description for the server",
+							},
+							&cli.StringFlag{
+								Name:  "resources",
+								Usage: "Updated server resources as JSON array",
+							},
+							&cli.StringFlag{
+								Name:  "binds",
+								Usage: "Updated server binds as JSON array for AMQP",
+							},
+						},
+					},
+					{
+						Name:        "delete",
+						Usage:       "Delete a server",
+						Description: "Delete a server by its ID",
+						Action:      actions.DeleteServer,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "server-id",
+								Usage:    "The ID of the server to delete",
+								Required: true,
+							},
+							&cli.BoolFlag{
+								Name:  "force",
+								Usage: "Skip confirmation prompt",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 
