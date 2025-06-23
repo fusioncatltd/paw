@@ -392,6 +392,36 @@ func GetCLIRouter() *cli.Command {
 					},
 				},
 			},
+			{
+				Name:        "workspaces",
+				Usage:       "Manage workspaces",
+				Description: "List and create workspaces",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all workspaces",
+						Description: "Get information about all workspaces you have access to",
+						Action:      actions.ListWorkspacesAction,
+					},
+					{
+						Name:        "new",
+						Usage:       "Create a new workspace",
+						Description: "Create a new workspace with the specified name and description",
+						Action:      actions.CreateWorkspaceAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Workspace name",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:  "description",
+								Usage: "Optional description of the workspace",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 
