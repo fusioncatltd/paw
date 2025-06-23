@@ -11,13 +11,24 @@ import (
 	"github.com/fusioncatalyst/paw/contracts"
 )
 
-func (c *FCApiClient) CreateServer(server *contracts.CreateServerRequest) (*contracts.Server, error) {
-	jsonData, err := json.Marshal(server)
+func (c *FCApiClient) CreateServer(projectID string, server *contracts.CreateServerRequest) (*contracts.Server, error) {
+	// Create request body with only the fields the API expects
+	reqBody := struct {
+		Name        string `json:"name"`
+		Type        string `json:"type"`
+		Description string `json:"description,omitempty"`
+	}{
+		Name:        server.Name,
+		Type:        server.Type,
+		Description: server.Description,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
 		return nil, errors.New("failed to marshal server data: " + err.Error())
 	}
 
-	url := fmt.Sprintf("%sv1/protected/servers", c.host)
+	url := fmt.Sprintf("%sv1/protected/projects/%s/servers", c.host, projectID)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, errors.New("failed to create request: " + err.Error())
@@ -53,10 +64,11 @@ func (c *FCApiClient) CreateServer(server *contracts.CreateServerRequest) (*cont
 }
 
 func (c *FCApiClient) ListServers(projectID string) (*contracts.ServersListResponse, error) {
-	url := fmt.Sprintf("%sv1/protected/servers", c.host)
-	if projectID != "" {
-		url = fmt.Sprintf("%s?project_id=%s", url, projectID)
+	if projectID == "" {
+		return nil, errors.New("project ID is required")
 	}
+	
+	url := fmt.Sprintf("%sv1/protected/projects/%s/servers", c.host, projectID)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -83,112 +95,17 @@ func (c *FCApiClient) ListServers(projectID string) (*contracts.ServersListRespo
 		}
 	}
 
-	var result contracts.ServersListResponse
-	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+	var servers []contracts.Server
+	if err := json.Unmarshal(bodyBytes, &servers); err != nil {
 		return nil, errors.New("failed to parse response: " + err.Error())
 	}
 
-	return &result, nil
+	result := &contracts.ServersListResponse{
+		Servers: servers,
+		Total:   len(servers),
+	}
+
+	return result, nil
 }
 
-func (c *FCApiClient) GetServer(serverID string) (*contracts.Server, error) {
-	url := fmt.Sprintf("%sv1/protected/servers/%s", c.host, serverID)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, errors.New("failed to create request: " + err.Error())
-	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, errors.New("failed to execute request: " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.New("failed to read response body: " + err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, &APIError{
-			StatusCode: resp.StatusCode,
-			Body:       string(bodyBytes),
-		}
-	}
-
-	var result contracts.Server
-	if err := json.Unmarshal(bodyBytes, &result); err != nil {
-		return nil, errors.New("failed to parse response: " + err.Error())
-	}
-
-	return &result, nil
-}
-
-func (c *FCApiClient) UpdateServer(serverID string, update *contracts.UpdateServerRequest) (*contracts.Server, error) {
-	jsonData, err := json.Marshal(update)
-	if err != nil {
-		return nil, errors.New("failed to marshal update data: " + err.Error())
-	}
-
-	url := fmt.Sprintf("%sv1/protected/servers/%s", c.host, serverID)
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, errors.New("failed to create request: " + err.Error())
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, errors.New("failed to execute request: " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.New("failed to read response body: " + err.Error())
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, &APIError{
-			StatusCode: resp.StatusCode,
-			Body:       string(bodyBytes),
-		}
-	}
-
-	var result contracts.Server
-	if err := json.Unmarshal(bodyBytes, &result); err != nil {
-		return nil, errors.New("failed to parse response: " + err.Error())
-	}
-
-	return &result, nil
-}
-
-func (c *FCApiClient) DeleteServer(serverID string) error {
-	url := fmt.Sprintf("%sv1/protected/servers/%s", c.host, serverID)
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		return errors.New("failed to create request: " + err.Error())
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.GetAuthorization()))
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return errors.New("failed to execute request: " + err.Error())
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return &APIError{
-			StatusCode: resp.StatusCode,
-			Body:       string(bodyBytes),
-		}
-	}
-
-	return nil
-}

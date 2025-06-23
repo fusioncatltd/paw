@@ -15,32 +15,21 @@ type ServerBind struct {
 }
 
 type Server struct {
-	ID          string            `json:"id,omitempty"`
-	Name        string            `json:"name"`
-	Type        string            `json:"type"`
-	Description string            `json:"description"`
-	Resources   []ServerResource  `json:"resources,omitempty"`
-	Binds       []ServerBind      `json:"binds,omitempty"`
-	ProjectID   string            `json:"project_id,omitempty"`
-	CreatedAt   string            `json:"created_at,omitempty"`
-	UpdatedAt   string            `json:"updated_at,omitempty"`
+	ID                 string `json:"id,omitempty"`
+	Name               string `json:"name"`
+	Protocol           string `json:"protocol"`
+	Description        string `json:"description"`
+	Status             string `json:"status,omitempty"`
+	ProjectID          string `json:"project_id,omitempty"`
+	UserID             string `json:"user_id,omitempty"`
+	CreatedByUserName  string `json:"created_by_user_name,omitempty"`
 }
 
 type CreateServerRequest struct {
-	Name        string            `json:"name"`
-	Type        string            `json:"type"`
-	Description string            `json:"description"`
-	Resources   []ServerResource  `json:"resources,omitempty"`
-	Binds       []ServerBind      `json:"binds,omitempty"`
-	ProjectID   string            `json:"project_id"`
-}
-
-type UpdateServerRequest struct {
-	Name        string            `json:"name,omitempty"`
-	Type        string            `json:"type,omitempty"`
-	Description string            `json:"description,omitempty"`
-	Resources   []ServerResource  `json:"resources,omitempty"`
-	Binds       []ServerBind      `json:"binds,omitempty"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	ProjectID   string `json:"project_id"`
 }
 
 type ServersListResponse struct {
