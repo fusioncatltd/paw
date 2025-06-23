@@ -36,3 +36,14 @@ type ServersListResponse struct {
 	Servers []Server `json:"servers"`
 	Total   int      `json:"total"`
 }
+
+type ServerResponse struct {
+	ID                 string `json:"id"`
+	Name               string `json:"name"`
+	Protocol           string `json:"protocol"`
+	Description        string `json:"description"`
+	Status             string `json:"status"`
+	ProjectID          string `json:"project_id"`
+	UserID             string `json:"user_id"`
+	CreatedByUserName  string `json:"created_by_user_name"`
+}

@@ -470,6 +470,59 @@ func GetCLIRouter() *cli.Command {
 					},
 				},
 			},
+			{
+				Name:        "resources",
+				Usage:       "Manage resources",
+				Description: "List and create resources in servers",
+				Commands: []*cli.Command{
+					{
+						Name:        "list",
+						Usage:       "List all resources in a server",
+						Description: "Get information about all resources in a specific server",
+						Action:      actions.ListResourcesAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "server-id",
+								Usage:    "The ID of the server",
+								Required: true,
+							},
+						},
+					},
+					{
+						Name:        "new",
+						Usage:       "Create a new resource",
+						Description: "Create a new resource in the specified server",
+						Action:      actions.CreateResourceAction,
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "server-id",
+								Usage:    "The ID of the server to create the resource in",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "name",
+								Usage:    "Name of the resource",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "description",
+								Usage:    "Description of the resource",
+								Required: false,
+							},
+							&cli.StringFlag{
+								Name:     "type",
+								Usage:    "Type of the resource (topic, exchange, queue, table, endpoint)",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "mode",
+								Usage:    "Mode of the resource (read, write, bind, readwrite)",
+								Required: true,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 

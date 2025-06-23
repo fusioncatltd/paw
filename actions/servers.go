@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/fusioncatalyst/paw/api"
 	"github.com/fusioncatalyst/paw/contracts"
@@ -16,21 +17,21 @@ func CreateServer(ctx context.Context, cmd *cli.Command) error {
 	projectID := cmd.String("project-id")
 
 	if name == "" {
-		return cli.Exit("Server name is required", 1)
+		return errors.New("Server name is required")
 	}
 	if serverType == "" {
-		return cli.Exit("Server type is required", 1)
+		return errors.New("Server type is required")
 	}
 	if description == "" {
-		return cli.Exit("Server description is required", 1)
+		return errors.New("Server description is required")
 	}
 	if projectID == "" {
-		return cli.Exit("Project ID is required", 1)
+		return errors.New("Project ID is required")
 	}
 
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to initialize API client: %v", err))
 	}
 
 	req := &contracts.CreateServerRequest{
@@ -44,14 +45,14 @@ func CreateServer(ctx context.Context, cmd *cli.Command) error {
 	result, err := client.CreateServer(projectID, req)
 	if err != nil {
 		if apiErr, ok := err.(*api.APIError); ok {
-			return cli.Exit(fmt.Sprintf("Failed to create server: %s", apiErr), 1)
+			return errors.New(fmt.Sprintf("Failed to create server: %s", apiErr))
 		}
-		return cli.Exit(fmt.Sprintf("Failed to create server: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to create server: %v", err))
 	}
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to format response: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to format response: %v", err))
 	}
 	fmt.Println(string(jsonData))
 
@@ -63,15 +64,15 @@ func ListServers(ctx context.Context, cmd *cli.Command) error {
 
 	client, err := api.NewFCApiClient()
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to initialize API client: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to initialize API client: %v", err))
 	}
 
 	result, err := client.ListServers(projectID)
 	if err != nil {
 		if apiErr, ok := err.(*api.APIError); ok {
-			return cli.Exit(fmt.Sprintf("Failed to list servers: %s", apiErr), 1)
+			return errors.New(fmt.Sprintf("Failed to list servers: %s", apiErr))
 		}
-		return cli.Exit(fmt.Sprintf("Failed to list servers: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to list servers: %v", err))
 	}
 
 	if len(result.Servers) == 0 {
@@ -81,7 +82,7 @@ func ListServers(ctx context.Context, cmd *cli.Command) error {
 
 	jsonData, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Failed to format response: %v", err), 1)
+		return errors.New(fmt.Sprintf("Failed to format response: %v", err))
 	}
 	fmt.Println(string(jsonData))
 
