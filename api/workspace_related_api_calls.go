@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+// UserWorkspaceAPIResponse represents a workspace with the user's role in it
+type UserWorkspaceAPIResponse struct {
+	Role      string               `json:"role"`
+	Workspace WorkspaceAPIResponse `json:"workspace"`
+}
+
 // WorkspaceAPIResponse represents the response from the API for workspace-related endpoints
 type WorkspaceAPIResponse struct {
 	Description string `json:"description"`
@@ -20,7 +26,7 @@ type WorkspaceAPIResponse struct {
 }
 
 // ListWorkspaces retrieves a list of workspaces for the current user
-func (c *FCApiClient) ListWorkspaces() ([]WorkspaceAPIResponse, error) {
+func (c *FCApiClient) ListWorkspaces() ([]UserWorkspaceAPIResponse, error) {
 	// Make API request
 	url := fmt.Sprintf("%sv1/protected/workspaces", c.host)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -46,7 +52,7 @@ func (c *FCApiClient) ListWorkspaces() ([]WorkspaceAPIResponse, error) {
 	}
 
 	// Read and parse response body
-	var workspaces []WorkspaceAPIResponse
+	var workspaces []UserWorkspaceAPIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&workspaces); err != nil {
 		return nil, errors.New("failed to decode response: " + err.Error())
 	}
